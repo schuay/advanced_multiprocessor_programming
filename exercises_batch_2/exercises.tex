@@ -96,6 +96,104 @@ Suppose A calls \lstinline|push()| while B calls \lstinline|pop()|. Let \Sp be t
 
 \vspace{3mm}
 
+\subsection{Exercise 54}
+
+\emph{Suppose we augment the FIFO Queue class with a \lstinline|peek()| method
+that returns but does not remove the first element in the queue. Show that the
+augmented queue has infinite consensus number.}
+
+\vspace{3mm}
+
+We show this by constructing a decision protocol using a FIFO Queue with an infinite consensus number as shown in Figure \ref{fig:fifoconsensus}.
+
+\begin{figure}
+\begin{lstlisting}
+class FIFOConsensus<T> {
+    FIFO f;
+    T[] proposed;
+    T decide(T value) {
+        proposed[threadID] = value;
+        f.enq(threadID);
+        return proposed[f.peek()];
+    }
+}
+\end{lstlisting}
+\caption{A consensus protocol using FIFO queues.}
+\label{fig:fifoconsensus}
+\end{figure}
+
+This protocol is wait-free since \lstinline|FIFO| is wait-free, and \lstinline|decide()| contains no loops. If two threads return different values,
+\lstinline|peek()| must have returned different thread ids. Since the first element is never removed, this violates the FIFO Queue protocol. Validity is ensured because each thread writes its value into \lstinline|proposed| before pushing its thread id.
+
+\lstinline|FIFOConsensus| is wait-free, consistent, valid, and works for any number of threads, and as such it is a consensus protocol with an infinite consensus number.
+
+\vspace{3mm}
+
+\subsection{Exercise 58}
+
+\emph{Objects of the \lstinline|StickyBit| class have three possible states $\bot$, 0, 1,
+initially $\bot$. A call to write(v), where v is 0 or 1, has the following effects:
+If the object’s state is $\bot$, then it becomes v.
+If the object’s state is 0 or 1, then it is unchanged.
+A call to \lstinline|read()| returns the object’s current state.
+1. Show that such an object can solve wait-free binary consensus (that is, all
+inputs are 0 or 1) for any number of threads.
+2. Show that an array of $\log_2 m$ \lstinline|StickyBit| objects with atomic registers can
+solve wait-free consensus for any number of threads when there are m possible inputs. (Hint: you need to give each thread one single-writer, multi-reader
+atomic register.)}
+
+\vspace{3mm}
+
+Figure \ref{fig:binarystickyconsensus} shows a construction of a binary consensus protocol with consensus number $\infty$.
+
+\vspace{3mm}
+
+\begin{figure}
+\begin{lstlisting}
+class StickyBinaryConsensus<T> {
+    StickyBit s;
+    T decide(T value) {
+        s.write(v);
+        return s.read();
+    }
+}
+\end{lstlisting}
+\caption{The binary consensus protocol composed of a StickyBit object.}
+\label{fig:binarystickyconsensus}
+\end{figure}
+
+Validity is given because \lstinline|write()| is called before any value is read (after writing, the state of the sticky bit is equal to the first written value). Consensus is given because a sticky bit changes its value only for the first write (and each following read returns that value). Assuming \lstinline|StickyBit| itself is wait-free, then so is our consensus protocol.
+
+Figure \ref{fig:stickyconsensus} shows a consensus protocol implementation for any number of threads and any number of possible values.
+
+\begin{figure}
+\begin{lstlisting}
+class StickyConsensus<T> {
+    int l = number of bits in value;
+    int t = number of threads;
+    StickyBit[] s = new StickyBit[l];
+    MRSWRegister[] a_reg = new MRSWRegister[2 * t]; /* Initially 0. */
+    T decide(T value) {
+        T v = value;
+        a_reg[threadID] = 1;
+        a_reg[t + threadID] = value;
+        for (int i = 0; i < l; i++) {
+            b = bit i of v;
+            s[i].write(b);
+            if (s[i].read() != b) {
+                for (int j = 0; j < t; j++) {
+                    if (a_reg[j] == 1 && bits [0..i] match in a_reg[t + j] and s) {
+                    v = a_reg[t + j];
+                }
+            }
+        }
+        return booleanArrayToInt(s);
+    }
+}
+\end{lstlisting}
+\caption{The consensus protocol composed of a StickyBit object.}
+\label{fig:stickyconsensus}
+\end{figure}
 
 \begin{comment}
 
