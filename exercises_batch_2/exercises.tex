@@ -144,9 +144,7 @@ atomic register.)}
 
 \vspace{3mm}
 
-Figure \ref{fig:binarystickyconsensus} shows a construction of a binary consensus protocol with consensus number $\infty$.
-
-\vspace{3mm}
+1. Figure \ref{fig:binarystickyconsensus} shows a construction of a binary consensus protocol with consensus number $\infty$.
 
 \begin{figure}
 \begin{lstlisting}
@@ -164,7 +162,7 @@ class StickyBinaryConsensus<T> {
 
 Validity is given because \lstinline|write()| is called before any value is read (after writing, the state of the sticky bit is equal to the first written value). Consensus is given because a sticky bit changes its value only for the first write (and each following read returns that value). Assuming \lstinline|StickyBit| itself is wait-free, then so is our consensus protocol.
 
-Figure \ref{fig:stickyconsensus} shows a consensus protocol implementation for any number of threads and any number of possible values.
+2. Figure \ref{fig:stickyconsensus} shows a consensus protocol implementation for any number of threads and any number of possible values.
 
 \begin{figure}
 \begin{lstlisting}
@@ -175,8 +173,8 @@ class StickyConsensus<T> {
     MRSWRegister[] a_reg = new MRSWRegister[2 * t]; /* Initially 0. */
     T decide(T value) {
         T v = value;
-        a_reg[threadID] = 1;
         a_reg[t + threadID] = value;
+        a_reg[threadID] = 1;
         for (int i = 0; i < l; i++) {
             b = bit i of v;
             s[i].write(b);
@@ -194,6 +192,33 @@ class StickyConsensus<T> {
 \caption{The consensus protocol composed of a StickyBit object.}
 \label{fig:stickyconsensus}
 \end{figure}
+
+\lstinline|decide()| first indicates that the current thread has submitted a value
+by setting \lstinline|a_reg[threadID]| to 1 and \lstinline|a_reg[t + threadID]| to the
+proposed value. It now attempts to set all sticky bits to \lstinline|v|. If it reaches
+a point at which the current sticky bit element is already set to another value,
+it looks for a thread which has proposed a value matching the already set sticky bits,
+and then tries to help that thread complete the sticky bit assignment. Once all
+sticky bits have been assigned, their value is returned.
+
+This protocol is wait-free since \lstinline|StickyBit|, the registers and
+\lstinline|booleanArrayToInt()| are wait-free, and because all loops are
+bounded. It is consistent because it returns a value derived from the sticky
+bit array after having attempted a write to each array element (and by
+definition of the sticky bit, its value never changes after being written
+once).
+
+It remains to show that \lstinline|StickyConsensus| is valid. Let $value_i[k]$
+be the $k$'th bit of the value proposed by thread $i$. Suppose there are two
+threads $i, j$ and two indices $k < l$ such that $s[k] = value_i[k]$ and $s[l]
+= value_j[l]$ (with $value_i[k] \neq value[j[k]$ and $value_i[l] \neq
+value_j[l]$). This implies that thread $j$ must have had a \lstinline|v| with
+bits $[0..l -1]$ not matching those of $s$. This however is impossible since
+during each outer loop iteration, it is checked whether the bits match; if they
+don't, \lstinline|v| is changed to match the value of a thread with matching
+bits. Therefore, all threads must return the same value, and the protocol is
+therefore valid.
+
 
 \begin{comment}
 
