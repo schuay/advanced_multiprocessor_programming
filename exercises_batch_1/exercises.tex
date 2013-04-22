@@ -87,15 +87,32 @@ s(p - 1) + 1   &= 2s'(p - 1) + 2 \\
 s'             &= \frac{s(p - 1) - 1}{2(p - 1)}
 \end{align}
 
+To transform the relative fraction $s$ into an absolute value $S$, we set $s = \frac{S}{S + R}$
+and $s' = \frac{S'}{S' + R}$. Note that the same $R$ is referenced in both equations since
+the parallelizable section does not change.
+
+\begin{align}
+\frac{S'}{S' + R} &= \frac{\frac{S}{S + R}(p - 1) - 1}{2(p - 1)} \\
+S'                &= \frac{S(p - 1) - 1}{S(p - 1) + 2R(p - 1) + 1}
+\end{align}
+
+
 The desired speedup of the sequential fraction method $M$ is therefore:
 
 \begin{align}
-S(p) &= \frac{s}{s'} = \frac{2s(p - 1)}{s(p - 1) - 1} \\
-     &= \frac{2 \cdot \frac{3}{10} \cdot (p - 1)}{\frac{3}{10} \cdot (p - 1) - 1} 
-      = \frac{6 \cdot (p - 1)}{3 \cdot (p - 1) - 10} \\
-     &= \frac{2 \cdot (p - 1)}{p - 6} 
+S(p) &= \frac{S}{S'} = S \cdot \frac{S(p - 1) + 2R(p - 1) + 1}{S(p - 1) - 1}
 \end{align}
 
+Since this assignment specifies $s = \frac{3}{10}$, we set $R = \frac{7}{3}S$:
+
+\begin{align}
+S(p) &= S \cdot \frac{\frac{17}{3}S(p - 1) + 1}{S(p - 1) - 1}
+\end{align}
+
+For a random assignment $p = 7, S = 1$, $S' = \frac{1}{6}$ results in a the desired
+overall speedup of $2$ (the speedup of $M$ is obviously $6$).
+
+\vspace{3mm}
 
 \emph{Suppose the method M can be sped up three-fold. What fraction of the overall
 execution time must M account for in order to double the overall speedup of
@@ -107,11 +124,26 @@ Under the same assumptions as for the previous point, we can reuse the formula
 for $S(p)$.
 
 \begin{align}
-S(p)      &= \frac{s}{s'} = \frac{2s(p - 1)}{s(p - 1) - 1} = 3 \\
-2s(p - 1) &= 3s(p - 1) - 3 \\
-s(p - 1)  &= 3 \\
-s         &= \frac{3}{p - 1}
+S(p) &= \frac{S}{S'} = S \cdot \frac{S(p - 1) + 2R(p - 1) + 1}{S(p - 1) - 1} = 3 \\
 \end{align}
+
+Which gives us:
+
+\begin{align}
+R &= \frac{3S(p-1) - 3 - S^2(p-1) - S}{2S(p-1)}
+\end{align}
+
+With $s = \frac{S}{S+R}$, we end up with:
+
+\begin{align}
+s &= \frac{S}{S+R} = \frac{2S^2(p-1)}{(5S-S^2)(p-1) - 3 - S}
+\end{align}
+
+Again, for $p = 7, S = 1$, the initial fraction $s$ evaluates to $\frac{3}{5}$.
+
+Note: I initially solved this assignment by looking only at the relative sequential
+fractions $s, s'$, which made the involved formulas much simpler but did not take into
+account that the parallel portion of the program did not change.
 
 \subsection{Exercise 11}
 
