@@ -404,6 +404,25 @@ Atomic registers satisfy the following conditions, regular registers only the fi
 \text{if } R^i \rightarrow R^j \text{ then } i \leq j
 \end{gather}
 
+The construction which we arrive at by substituting the array of atomic
+registers \lstinline|a_table| with an array of regular registers
+\lstinline|r_table| yields an atomic MRSW register.
+
+Regular and atomic registers differ only in their behavior for overlapping reads
+and writes. Since the second property concerns non-overlapping writes, and the original
+construction from the figure is an atomic MRSW register, the altered construction
+also satisfies the second property.
+
+It remains to show the third condition, which specifies the behavior of non-overlapping
+reads. To violate this condition, a read must return an earlier value than a preceding,
+non-overlapping read. Since every read writes its value into an entire row, this is impossible.
+The later read will pick up the latest value read by any earlier read by fetching
+the maximum \lstinline|StampedValue| over a column and so this condition is also satisfied.
+
+The linearization point is either when the write completes, or when a read (which has 
+already seen the latest value) finishes writing its row.
+
+\begin{comment}
 The construction which we arrive at by substituting the array of atomic registers 
 \lstinline|a_table| with an array of regular registers \lstinline|r_table| does not
 yield an atomic MRSW register.
@@ -412,6 +431,7 @@ We only need to show that the third condition is not satisfied; \lstinline|read(
 determines some value from \lstinline|r_table|, which is returned as the result.
 However, since the value is taken from a regular register (which does not necessarily
 satisify the third condition), this value is also not guaranteed to satisfy it.
+\end{comment}
 
 
 \subsection{Exercise 38}
