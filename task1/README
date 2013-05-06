@@ -1,0 +1,4 @@
+Implement a periodic counting network using pheet and C++11 atomics.
+Compare performance to fetch-and-increment (using pheet benchmarks).
+
+www.pheet.org
