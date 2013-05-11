@@ -6,6 +6,7 @@
 \usepackage{comment}
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
+\usepackage[pdfborder={0 0 0}]{hyperref}
 
 \definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
 \definecolor{Gray}{gray}{0.5}
@@ -47,6 +48,126 @@ Morgan Kaufmann, 2008. Revised 1st Edition, 2012.}
 
 \section{Solutions}
 
+\subsection{Exercise 21}
+
+\emph{Explain why quiescent consistency is compositional.}
+
+\vspace{3mm}
+
+An object is quiescent if it has no pending method calls. A method call is pending if
+its call event has occurred, but not its response event.
+
+Let's say an object A is composed of two quiescently consistent objects B and C.
+By definition, method calls to B and C appear to take effect in real-time order when
+separated by a period of quiescence. Since B and B are only accessed during method calls of
+A, any period of quiescence for A is also a period of quiescence for B and C. Therefore,
+the property of quiescent consistency is preserved for object A as well.
+
+\subsection{Exercise 32}
+
+{\itshape
+This exercise examines a queue implementation (Fig. \ref{fig:nonlinearizablequeue}) whose
+\lstinline|enq()| method does not have a linearization point.
+
+The queue stores its items in an items array, which for simplicity we will
+assume is unbounded. The tail field is an \lstinline|AtomicInteger|, initially zero. The
+\lstinline|enq()| method reserves a slot by incrementing tail, and then stores the item at
+that location. Note that these two steps are not atomic: there is an interval after
+tail has been incremented but before the item has been stored in the array.
+
+The \lstinline|deq()| method reads the value of tail, and then traverses the array in
+ascending order from slot zero to the tail. For each slot, it swaps null with the
+current contents, returning the first non-null item it finds. If all slots are null, the
+procedure is restarted.}
+
+\emph{Give an example execution showing that the linearization point for enq()
+cannot occur at Line 15. Hint: give an execution where two \lstinline|enq()|
+calls are not linearized in the order they execute Line 15.}
+
+\vspace{3mm}
+
+A: 15, B: 15, B: 16, C: \lstinline|deq() == B|.
+
+\vspace{3mm}
+
+\emph{Give another example execution showing that the linearization point for \lstinline|enq()|
+cannot occur at Line 16.}
+
+\vspace{3mm}
+
+A: 15, B: 15, B: 15, A: 15, C: \lstinline|deq() == A|.
+
+\vspace{3mm}
+
+\emph{Since these are the only two memory accesses in \lstinline|enq()|, we must conclude that
+enq() has no single linearization point. Does this mean \lstinline|enq()| is not linearizable?}
+
+\vspace{3mm}
+
+No. The linearization point occurs as soon as \lstinline|getAndSet()| in line 20
+returns a non-\lstinline|null| value.
+
+\begin{figure}
+\begin{lstlisting}
+public class HWQueue<T> {
+    AtomicReference<T>[] items;
+    AtomicInteger tail;
+    static final int CAPACITY = 1024;
+    public HWQueue() {
+        items =(AtomicReference<T>[])Array.newInstance(AtomicReference.class, CAPACITY);
+        for (int i = 0; i < items.length; i++) {
+            items[i] = new AtomicReference<T>(null);
+        }
+        tail = new AtomicInteger(0);
+    }
+    public void enq(T x) {
+        int i = tail.getAndIncrement();
+        items[i].set(x);
+    }
+    public T deq() {
+        while (true) {
+            int range = tail.get();
+            for (int i = 0; i < range; i++) {
+                T value = items[i].getAndSet(null);
+                if (value != null) {
+                    return value;
+                }
+            }
+        }
+    }
+}
+\end{lstlisting}
+\caption{The Herlihy/Wing queue used in exercise 32.}
+\label{fig:nonlinearizablequeue}
+\end{figure}
+
+\subsection{Exercise 51}
+
+\emph{Show that if binary consensus using atomic registers is impossible for
+$n$ threads, then so is consensus over $k$ values, where $k > 2$.}
+
+\vspace{3mm}
+
+Suppose binary consensus over $k > 2$ values is possible, while binary consensus
+is impossible. We could now construct a binary consensus protocol simply by forming
+the $k$-consensus and mapping $[0, \lceil \frac{k}{2} \rceil[$ to $0$ and
+$[\lceil \frac{k}{2} \rceil, k]$ to $1$. This contradicts the fact that binary consensus is impossible.
+
+Therefore, $k$ consensus is not possible if binary consensus is impossible.
+
+\subsection{Exercise 52}
+
+\emph{Show that with sufficiently many $n$-thread binary consensus objects
+and atomic registers one can implement $n$-thread consensus over $n$ values.}
+
+The construction is equivalent to the \lstinline|StickyBit| consensus protocol from
+exercise 58. \lstinline|decide()| first writes its value into an array of atomic registers: \lstinline|a_values[threadID] = value|. It then marks itself as participating in the decision: \lstinline|a_participating[threadID] = 1|. Then, for each bit of the value, it calls \lstinline|decide()| on
+the corresponding binary consensus object. If the decision matches the bit, we continue with the next bit.
+Otherwise, we search all other participating threads for a value with matching bits up to the current one
+and try to assist that thread in writing its value.
+
+Once this is done, we reconstruct the value from the decided bits and return it.
+
 \subsection{Exercise 53}
 
 \emph{The \lstinline|Stack| class provides two methods: \lstinline|push(x)| pushes a value onto the top of the stack, and \lstinline|pop()| removes and returns the most recently pushed value. Prove that the \lstinline|Stack| class has consensus number exactly two.}
@@ -86,7 +207,7 @@ class StackConsensus<T> {
 
 This protocol is wait-free since \lstinline|Stack| is wait-free and \lstinline|decide()| contains no loops. If each thread returns its own input, both must have popped \lstinline|WIN|, violating the \lstinline|Stack| protocol. Likewise, both threads returning the other's value also violates the protocol. Additionally, the protocol must return one of the proposed values because the winning value is written before \lstinline|WIN| is popped.
 
-We now need to show that \lstinline|Stack| has a consensus number of exactly two. Assume we have a consensus protocol for threads A, B, and C. According to Lemma 5.1.3, there must be a critical state s. Without loss of generality, we assume that A's next move takes to protocol to a 0-valent state, and B's next move leads to a 1-valent state. We also know that these calls must be non-communtative; this implies that they need to be calls on the same object. Next, we know that these calls cannot be made to registers since registers have a consensus number of 1. Therefore, these calls must be made to the same stack object. We can now distinguish between three cases: either both A and B call \lstinline|push()|, both call \lstinline|pop()|, or A calls \lstinline|push()| while B calls \lstinline|pop()|.
+We now need to show that \lstinline|Stack| has a consensus number of exactly two. Assume we have a consensus protocol for threads A, B, and C. According to Lemma 5.1.3, there must be a critical state s. Without loss of generality, we assume that A's next move takes the protocol to a 0-valent state, and B's next move leads to a 1-valent state. We also know that these calls must be non-communtative; this implies that they need to be calls on the same object. Next, we know that these calls cannot be made to registers since registers have a consensus number of 1. Therefore, these calls must be made to the same stack object. We can now distinguish between three cases: either both A and B call \lstinline|push()|, both call \lstinline|pop()|, or A calls \lstinline|push()| while B calls \lstinline|pop()|.
 
 Suppose both A and B call \lstinline|pop()|. Let \Sp be the state if A pops, followed by B; and \Spp if the pops occur in the opposite order. Since \Sp is 0-valent while \Spp is 1-valent, and C cannot distinguish between both states, it is impossible for C to decide the correct value in both states.
 
@@ -216,9 +337,111 @@ value_j[l]$). This implies that thread $j$ must have had a \lstinline|v| with
 bits $[0..l -1]$ not matching those of $s$. This however is impossible since
 during each outer loop iteration, it is checked whether the bits match; if they
 don't, \lstinline|v| is changed to match the value of a thread with matching
-bits. Therefore, all threads must return the same value, and the protocol is
-therefore valid.
+bits. Therefore, all threads must return the same value, and the protocol is valid.
 
+\subsection{Exercise 62}
+
+{\itshape Consider the following $2$-thread \lstinline|QuasiConsensus| problem:
+
+Two threads, A and B, are each given a binary input. If both have input \lstinline|v|, then
+both must decide \lstinline|v|. If they have mixed inputs, then either they must agree, or B
+may decide $0$ and A may decide $1$ (but not vice versa).
+
+Here are three possible exercises (only one of which works). (1) Give a 2-thread
+consensus protocol using QuasiConsensus showing it has consensus number 2,
+or (2) give a critical-state proof that this object’s consensus number is 1, or (3)
+give a read–write implementation of QuasiConsensus, thereby showing it has
+consensus number 1.}
+
+\vspace{3mm}
+
+Suppose we are in the critical state. Since we only have the \lstinline|QuasiConsensus| object,
+the only possible action is threads A and B to call \lstinline|decide()| on it.
+For each combination of input mappings, we will now construct a situation in which it is impossible
+to reach consensus.
+
+$A: 0, B: 0$: For identical inputs $0$, \lstinline|QuasiConsensus| returns $0$. In this case,
+thread B cannot distinguish between this state and a state in which $\textit{decide}_A(1) = 1$.
+
+$A: 1, B: 1$: For identical inputs $1$, \lstinline|QuasiConsensus| returns $1$. In this case,
+thread A cannot distinguish between this state and a state in which $\textit{decide}_B(0) = 0$.
+
+$A: 1, B: 0$: For mixed inputs, \lstinline|QuasiConsensus| may either agree, or decide $1$ for A and $0$ for B.
+If $\textit{decide}_B(0) = 0$ and $\textit{decide}_A(1) = 1$, A does not know if B called $\textit{decide}_B(1) = 1$.
+
+$A: 0, B: 1$: For mixed inputs, \lstinline|QuasiConsensus| may either agree, or decide $1$ for A and $0$ for B.
+If $\textit{decide}_A(0) = 1$, A cannot distinguish between states a) in which B receives $1$ as the decision (and A should also decide 1), and b) in which B receives $0$ as the decision.
+
+QuasiConsensus therefore has a consensus number of 1.
+
+\subsection{Exercise 65}
+
+{\itshape
+A team consensus object provides the same propose() and decide()
+methods as consensus. A team consensus object solves consensus as long as no
+more than two distinct values are ever proposed. (If more than two are proposed,
+the results are undefined.)
+
+Show how to solve n-thread consensus, with up to n distinct input values, from
+a supply of team consensus objects.}
+
+\vspace{3mm}
+
+We simply construct a complete binary tree of team consensus objects with the smallest number
+of leaf nodes $l = 2^k$ such that $l \geq n$. The remaining consensus protocol is shown in figure \ref{fig:teamconsensus}. This protocol is correct since every team consensus object receives
+at most two distinct input values, namely either the raw inputs (at the leaf level), or the
+decisions of its two children.
+
+\begin{figure}
+\begin{lstlisting}
+class TeamConsensus<T> {
+    TreeNode leafs[n];
+    T decide(T value) {
+        T v = value;
+        TreeNode node = leafs[threadID];
+
+        while (node != null) {
+            v = node.decide(v);
+            node = node.parent;
+        }
+
+        return v;
+    }
+}
+\end{lstlisting}
+\caption{The consensus protocol composed of a tree of team consensus object.}
+\label{fig:teamconsensus}
+\end{figure}
+
+\subsection{Exercise 68}
+
+{\itshape Fig. 5.17\footnote{In the book. The implementation is not relevant to this exercise.}
+shows a FIFO queue implemented with read, write,
+\lstinline|getAndSet()| (that is, swap) and \lstinline|getAndIncrement()| methods. You may assume this queue is linearizable, and wait-free as long as \lstinline|deq()| is never applied to an
+empty queue. Consider the following sequence of statements.
+
+\begin{itemize}
+\item Both \lstinline|getAndSet()| and \lstinline|getAndIncrement()| methods have consensus num-
+ber 2.
+\item We can add a \lstinline|peek()| simply by taking a snapshot of the queue (using the meth-
+ods studied earlier in the course) and returning the item at the head of the
+queue.
+\item Using the protocol devised for Exercise 54, we can use the resulting queue to
+solve n-consensus for any n.
+\end{itemize}
+
+We have just constructed an n-thread consensus protocol using only objects with
+consensus number 2. Identify the faulty step in this chain of reasoning, and
+explain what went wrong.}
+
+\vspace{3mm}
+
+The second step is incorrect. The mechanism explained in Chapter 4.3 takes a snapshot
+of a number of atomic readers of disjunct registers. The mechanism required for this
+exercise would be an atomic snapshot of a single, multi-reader, multi-writer object, which
+is a different problem altogether.
+
+If in fact we did have a way to create such a copy of the FIFO queue, the reasoning would be sound.
 
 \begin{comment}
 
