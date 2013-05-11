@@ -27,6 +27,15 @@ private:
     std::atomic<T> *out;
 };
 
+/**
+ * What's the point of the counting network if the sum is not returned
+ * from incr()? If we need to sum up all values, why not just use one
+ * atomic<T> per thread and sum those up? Less processing, better locality.
+ *
+ * The implementation uses no pheet features and barely any atomics. Is this
+ * correct?
+ */
+
 template <class Pheet, typename T>
 PeriodicCountingNetwork<Pheet, T>::PeriodicCountingNetwork()
 {
