@@ -51,7 +51,7 @@ PeriodicCountingNetwork<Pheet, T>::incr()
     if (id == -1) {
         id = Pheet::get_place_id();
     }
-    out[periodic->traverse(id)]++;
+    out[periodic->traverse(id)].fetch_add(1, std::memory_order_relaxed);
 }
 
 template <class Pheet, typename T>
@@ -60,7 +60,7 @@ PeriodicCountingNetwork<Pheet, T>::get_sum()
 {
     T sum = 0;
     for (int i = 0; i < THREAD_COUNT; i++) {
-        sum += out[i].load();
+        sum += out[i].load(std::memory_order_relaxed);
     }
     return sum;
 }
