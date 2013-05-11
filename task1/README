@@ -11,3 +11,12 @@ Dependencies
 
 For this task, we used revision 420. After pulling pheet itself, make sure
 to point CMake to the correct directory.
+
+To integrate the PCN into pheet's benchmarks:
+
+* Include our pcn.h in test/count_bench/CountBench.cpp
+* Add a new run_bench() call to run_test()
+* Activate the count benchmark in test/settings.h
+* Add the include path in settings.mk
+* make test && bin/pheet_test
+* Optionally use csvheet to convert the output into a usable CSV format
