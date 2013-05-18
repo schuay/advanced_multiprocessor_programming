@@ -19,12 +19,9 @@ else()
 endif()
 
 find_package(Threads REQUIRED)
-find_package(Check REQUIRED)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_definitions("-Wall -Wextra -pedantic -std=gnu++11 -O3")
 endif()
-
-enable_testing()
 
 add_subdirectory(src)
