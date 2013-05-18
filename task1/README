@@ -3,6 +3,8 @@ Specification
 
 Implement a periodic counting network using pheet and C++11 atomics.
 Compare performance to fetch-and-increment (using pheet benchmarks).
+Compare sequential with relaxed consistency.
+5-minute presentation with experience, performance, code, stability, pitfalls.
 
 Dependencies
 ============
