@@ -13,24 +13,30 @@ public:
 
 private:
     const int width;
-    Balancer *layer;
+    Balancer **layer;
 };
 
 Layer::Layer(const int width) :
     width(width)
 {
-    layer = new Balancer[width];
+    layer = new Balancer*[width];
+    for (int i = 0; i < width / 2; i++) {
+        layer[i] = layer[width - i - 1] = new Balancer();
+    }
 }
 
 Layer::~Layer()
 {
+    for (int i = 0; i < width / 2; i++) {
+        delete layer[i];
+    }
     delete[] layer;
 }
 
 int
 Layer::traverse(const int input)
 {
-    const int toggle = layer[input].traverse();
+    const int toggle = layer[input]->traverse();
 
     int hi, lo;
     if (input < width / 2) {
