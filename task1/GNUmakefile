@@ -1,4 +1,14 @@
-PHEET_DIR = ../../pheet
+RSYNC = rsync
+SSH = ssh
+
+SFLAGS = -F '../.ssh-cfg'
+RFLAGS = --recursive --progress --copy-links --exclude=build/ -e "$(SSH) $(SFLAGS)"
+
+HOST = saturn
+REMOTEDIR = ~/advanced_multiprocessor_programming/task1
+REMOTEPHEETDIR = ~
+SOURCE = . ../CMakeModules
+PHEETDIR = ../../pheet
 
 bake:
 	mkdir -p build
@@ -8,7 +18,11 @@ check: bake
 	cd build; ctest --output-on-failure
 
 bench:
-	cd $(PHEET_DIR) && make clean test && bin/pheet_test
+	cd $(PHEETDIR) && make clean test && bin/pheet_test
+
+hand-in:
+	$(RSYNC) $(RFLAGS) $(PHEETDIR) $(HOST):$(REMOTEPHEETDIR)
+	$(RSYNC) $(RFLAGS) $(SOURCE) $(HOST):$(REMOTEDIR)
 
 clean:
 	rm -rf build
