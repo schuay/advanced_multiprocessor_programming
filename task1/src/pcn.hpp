@@ -6,8 +6,6 @@
 
 #include "periodic.hpp"
 
-#define THREAD_COUNT (4)
-
 thread_local int id = -1;
 
 template <class Pheet, typename T>
@@ -25,6 +23,8 @@ public:
 private:
     Periodic *periodic;
     std::atomic<T> *out;
+
+    int thread_count;
 };
 
 /**
@@ -36,10 +36,13 @@ private:
 template <class Pheet, typename T>
 PeriodicCountingNetwork<Pheet, T>::PeriodicCountingNetwork()
 {
-    periodic = new Periodic(THREAD_COUNT);
-    out = new std::atomic<T>[THREAD_COUNT];
+	typename Pheet::MachineModel mm;
+	thread_count = std::min(mm.get_num_leaves(), Pheet::Environment::max_cpus);
 
-    for (int i = 0; i < THREAD_COUNT; i++) {
+    periodic = new Periodic(thread_count);
+    out = new std::atomic<T>[thread_count];
+
+    for (int i = 0; i < thread_count; i++) {
         out[i] = 0;
     }
 }
@@ -65,7 +68,7 @@ T
 PeriodicCountingNetwork<Pheet, T>::get_sum()
 {
     T sum = 0;
-    for (int i = 0; i < THREAD_COUNT; i++) {
+    for (int i = 0; i < thread_count; i++) {
         sum += out[i].load(std::memory_order_relaxed);
     }
     return sum;
