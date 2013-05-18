@@ -6,8 +6,6 @@
 
 #include "periodic.hpp"
 
-thread_local int id = -1;
-
 template <class Pheet, typename T>
 class PeriodicCountingNetwork
 {
@@ -62,9 +60,7 @@ template <class Pheet, typename T>
 void
 PeriodicCountingNetwork<Pheet, T>::incr()
 {
-    if (id == -1) {
-        id = Pheet::get_place_id();
-    }
+    const int id = Pheet::get_place_id();
     out[periodic->traverse(id)].fetch_add(pcn_width, std::memory_order_relaxed);
 }
 
