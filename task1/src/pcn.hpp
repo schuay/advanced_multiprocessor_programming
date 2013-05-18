@@ -43,7 +43,7 @@ PeriodicCountingNetwork<Pheet, T>::PeriodicCountingNetwork()
     out = new std::atomic<T>[thread_count];
 
     for (int i = 0; i < thread_count; i++) {
-        out[i] = 0;
+        out[i] = i - thread_count + 1;
     }
 }
 
@@ -60,18 +60,21 @@ PeriodicCountingNetwork<Pheet, T>::incr()
     if (id == -1) {
         id = Pheet::get_place_id();
     }
-    out[periodic->traverse(id)].fetch_add(1, std::memory_order_relaxed);
+    out[periodic->traverse(id)].fetch_add(thread_count, std::memory_order_relaxed);
 }
 
 template <class Pheet, typename T>
 T
 PeriodicCountingNetwork<Pheet, T>::get_sum()
 {
-    T sum = 0;
+    T max = 0;
     for (int i = 0; i < thread_count; i++) {
-        sum += out[i].load(std::memory_order_relaxed);
+        const T next = out[i].load(std::memory_order_relaxed);
+        if (next > max) {
+            max = next;
+        }
     }
-    return sum;
+    return max;
 }
 
 template <class Pheet, typename T>
