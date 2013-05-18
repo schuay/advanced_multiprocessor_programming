@@ -1,0 +1,105 @@
+\documentclass[notes=show]{beamer}
+
+\usepackage{comment}
+\usepackage{default}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{Gray}{gray}{0.5}
+
+\lstset{
+    language=C,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{OliveGreen},
+    commentstyle=\color{Gray},
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    showspaces=false,
+    showtabs=false,
+    numbers=left,
+}
+
+\begin{document}
+
+\begin{frame}
+\frametitle{Periodic Counting Network}
+\begin{itemize}
+\item A parallel way of counting.
+\item Principle: Transform an unpredictable sequence of incoming thread ID's 
+      with a predictable sequence of outgoing counters.
+\item Each thread can tell its result without consulting other counters.
+\item Replaces one bottleneck (the counter) with multiple bottlenecks.
+\end{itemize}
+\end{frame}
+\note{A note} % TODO
+
+\begin{frame}
+\frametitle{Experience}
+\begin{itemize}
+\item Difficult to integrate into my usual project setup (git, check, automated
+      hand-in and unit tests).
+\item Template programming requires headers-only or explicitly instantiating all
+      required template instances before use.
+\item As always, saturn makes life difficult by being extremely outdated,
+      missing CMake files, and installing components in odd locations.
+\item Algorithm in the book assumes that the network width is a power of two.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Code}
+\framesubtitle{incr()}
+\begin{lstlisting}
+template <class Pheet, typename T>
+void
+PeriodicCountingNetwork<Pheet, T>::incr()
+{
+    const int id = Pheet::get_place_id();
+    out[periodic->traverse(id)].fetch_add(pcn_width, std::memory_order_relaxed);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Code}
+\framesubtitle{get\_sum()}
+\begin{lstlisting}
+template <class Pheet, typename T>
+T
+PeriodicCountingNetwork<Pheet, T>::get_sum()
+{
+    T max = 0;
+    for (int i = 0; i < pcn_width; i++) {
+        const T next = out[i].load(std::memory_order_relaxed);
+        if (next > max) {
+            max = next;
+        }
+    }
+    return max;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\frametitle{Results}
+\end{frame}
+\begin{comment}
+Benchmarks vs pheet
+State compiler flags, system, compiler
+Reasons:
+* Counting networks unsuited for this task (we don't return count after inc, thus
+losing all advantages)
+* Many! more instructions instead of a single fetch_and_increment
+* No thread locality
+* Valgrind shows nothing interesting
+\end{comment}
+
+\begin{frame}
+\frametitle{Results}
+% Benchmarks sequential vs relaxed
+% State compiler flags, system, compiler
+\end{frame}
+
+\end{document}
