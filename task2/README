@@ -1,0 +1,31 @@
+Specification
+=============
+
+Implement a lock-free cuckoo hash table using pheet and C++11 atomics.
+
+Expectations
+============
+
+* Efficient and correct implementation.
+* Good theoretical analysis (invariants, linearizability, progress guarantees).
+* Good benchmark analysis.
+* Short document: 2-4 pages excluding plots and sourcecode. Description of data structure. Theoretical analysis. Benchmark (results, process).
+
+Dependencies
+============
+
+* Pheet (www.pheet.org)
+
+For this task, we used revision 420. After pulling pheet itself, make sure
+to point CMake to the correct directory.
+
+TODO: Adapt these instructions to the set benchmarks.
+
+To integrate the PCN into pheet's benchmarks:
+
+* Include our pcn.h in test/count_bench/CountBench.cpp
+* Add a new run_bench() call to run_test()
+* Activate the count benchmark in test/settings.h
+* Add the include path in settings.mk
+* make test && bin/pheet_test
+* Optionally use csvheet to convert the output into a usable CSV format
