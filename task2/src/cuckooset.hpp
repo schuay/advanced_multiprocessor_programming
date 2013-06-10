@@ -21,13 +21,8 @@ public:
     bool contains(const TT &item);
     bool remove(const TT &item);
 
-    void push(const TT &item);
-    TT pop();
-    TT peek();
-
     bool is_empty();
     size_t size();
-    size_t get_length();
 
     static void print_name();
 

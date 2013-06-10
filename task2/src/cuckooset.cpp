@@ -43,13 +43,6 @@ CuckooSet<Pheet, TT, Comparator>::size()
 }
 
 template <class Pheet, typename TT, class Comparator>
-size_t
-CuckooSet<Pheet, TT, Comparator>::get_length()
-{
-   return size();
-}
-
-template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::print_name()
 {
