@@ -4,8 +4,110 @@
 
 START_TEST(test_sanity)
 {
-    CuckooSet<pheet::Pheet, int> set;
+    CuckooSet<pheet::Pheet, unsigned long> set;
     fail_unless(1 == 1);
+}
+END_TEST
+
+START_TEST(empty_is_empty)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+    fail_unless(set.is_empty());
+}
+END_TEST
+
+START_TEST(empty_is_size_0)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+    fail_unless(set.size() == 0);
+}
+END_TEST
+
+START_TEST(contains_1)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+    fail_unless(!set.contains(1));
+}
+END_TEST
+
+START_TEST(contains_2)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+    set.put(1);
+    fail_unless(set.contains(1));
+}
+END_TEST
+
+START_TEST(contains_3)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+    set.put(1);
+    set.remove(1);
+    fail_unless(!set.contains(1));
+}
+END_TEST
+
+START_TEST(contains_4)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+    set.put(1);
+    fail_unless(set.contains(1));
+    fail_unless(!set.contains(2));
+}
+END_TEST
+
+START_TEST(put_1)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+    set.put(1);
+    set.put(1);
+    set.put(1);
+    fail_unless(set.contains(1));
+}
+END_TEST
+
+START_TEST(put_2)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+
+    srand(42);
+
+    const int iters = 123456;
+    unsigned int size = 0;
+    for (int i = 0; i < iters; i++) {
+        const int v = rand();
+        if (!set.contains(v)) {
+            size++;
+        }
+        set.put(v);
+    }
+    fail_unless(set.size() == size);
+}
+END_TEST
+
+START_TEST(remove_1)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+
+    srand(42);
+
+    const int iters = 123456;
+    unsigned int size = 0;
+    for (int i = 0; i < iters; i++) {
+        const int v = rand();
+        if (!set.contains(v)) {
+            size++;
+        }
+        set.put(v);
+    }
+    fail_unless(set.size() == size);
+
+    srand(42);
+
+    for (int i = 0; i < iters; i++) {
+        set.remove(rand());
+    }
+    fail_unless(set.size() == 0);
 }
 END_TEST
 
@@ -16,6 +118,15 @@ create_suite(void)
     TCase *tc_core = tcase_create("core");
 
     tcase_add_test(tc_core, test_sanity);
+    tcase_add_test(tc_core, empty_is_empty);
+    tcase_add_test(tc_core, empty_is_size_0);
+    tcase_add_test(tc_core, contains_1);
+    tcase_add_test(tc_core, contains_2);
+    tcase_add_test(tc_core, contains_3);
+    tcase_add_test(tc_core, contains_4);
+    tcase_add_test(tc_core, put_1);
+    tcase_add_test(tc_core, put_2);
+    tcase_add_test(tc_core, remove_1);
 
     suite_add_tcase(s, tc_core);
 
