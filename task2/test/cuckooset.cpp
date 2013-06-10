@@ -111,6 +111,87 @@ START_TEST(remove_1)
 }
 END_TEST
 
+static void
+put_wrapper(CuckooSet<pheet::Pheet, unsigned long> *set,
+            const unsigned long v)
+{
+    set->put(v);
+}
+
+static void
+contains_wrapper(CuckooSet<pheet::Pheet, unsigned long> *set,
+            const unsigned long v)
+{
+    set->contains(v);
+}
+
+static void
+remove_wrapper(CuckooSet<pheet::Pheet, unsigned long> *set,
+            const unsigned long v)
+{
+    set->remove(v);
+}
+
+START_TEST(smoke_1)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+
+    const int iters = 1234567;
+    {
+        pheet::Pheet::Environment env;
+
+        for (int i = 0; i < iters; i++) {
+            pheet::Pheet::spawn(put_wrapper, &set, i);
+        }
+    }
+
+    fail_unless(set.size() == iters);
+}
+END_TEST
+
+START_TEST(smoke_2)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+
+    const int iters = 123456;
+    {
+        pheet::Pheet::Environment env;
+
+        for (int i = 0; i < iters; i++) {
+            pheet::Pheet::spawn(put_wrapper, &set, i);
+            pheet::Pheet::spawn(contains_wrapper, &set, (i + 12345) % iters);
+        }
+    }
+
+    fail_unless(set.size() == iters);
+}
+END_TEST
+
+START_TEST(smoke_3)
+{
+    CuckooSet<pheet::Pheet, unsigned long> set;
+
+    const int iters = 123456;
+    {
+        pheet::Pheet::Environment env;
+
+        for (int i = 0; i < iters; i++) {
+            pheet::Pheet::spawn(put_wrapper, &set, i);
+        }
+    }
+
+    {
+        pheet::Pheet::Environment env;
+
+        for (int i = 0; i < iters; i++) {
+            pheet::Pheet::spawn(remove_wrapper, &set, i);
+        }
+    }
+
+    fail_unless(set.size() == 0);
+}
+END_TEST
+
 static Suite *
 create_suite(void)
 {
@@ -128,7 +209,14 @@ create_suite(void)
     tcase_add_test(tc_core, put_2);
     tcase_add_test(tc_core, remove_1);
 
+    TCase *tc_smoke = tcase_create("parallel_smoke");
+
+    tcase_add_test(tc_core, smoke_1);
+    tcase_add_test(tc_core, smoke_2);
+    tcase_add_test(tc_core, smoke_3);
+
     suite_add_tcase(s, tc_core);
+    suite_add_tcase(s, tc_smoke);
 
     return s;
 }
