@@ -2,6 +2,8 @@
 
 #include <check.h>
 
+#define ITERS (123456)
+
 START_TEST(test_sanity)
 {
     CuckooSet<pheet::Pheet, unsigned long> set;
@@ -72,9 +74,8 @@ START_TEST(put_2)
 
     srand(42);
 
-    const int iters = 123456;
     unsigned int size = 0;
-    for (int i = 0; i < iters; i++) {
+    for (int i = 0; i < ITERS; i++) {
         const int v = rand();
         if (!set.contains(v)) {
             size++;
@@ -91,9 +92,8 @@ START_TEST(remove_1)
 
     srand(42);
 
-    const int iters = 123456;
     unsigned int size = 0;
-    for (int i = 0; i < iters; i++) {
+    for (int i = 0; i < ITERS; i++) {
         const int v = rand();
         if (!set.contains(v)) {
             size++;
@@ -104,7 +104,7 @@ START_TEST(remove_1)
 
     srand(42);
 
-    for (int i = 0; i < iters; i++) {
+    for (int i = 0; i < ITERS; i++) {
         set.remove(rand());
     }
     fail_unless(set.size() == 0);
@@ -136,16 +136,15 @@ START_TEST(smoke_1)
 {
     CuckooSet<pheet::Pheet, unsigned long> set;
 
-    const int iters = 1234567;
     {
         pheet::Pheet::Environment env;
 
-        for (int i = 0; i < iters; i++) {
+        for (int i = 0; i < ITERS; i++) {
             pheet::Pheet::spawn(put_wrapper, &set, i);
         }
     }
 
-    fail_unless(set.size() == iters);
+    fail_unless(set.size() == ITERS);
 }
 END_TEST
 
@@ -153,17 +152,16 @@ START_TEST(smoke_2)
 {
     CuckooSet<pheet::Pheet, unsigned long> set;
 
-    const int iters = 123456;
     {
         pheet::Pheet::Environment env;
 
-        for (int i = 0; i < iters; i++) {
+        for (int i = 0; i < ITERS; i++) {
             pheet::Pheet::spawn(put_wrapper, &set, i);
-            pheet::Pheet::spawn(contains_wrapper, &set, (i + 12345) % iters);
+            pheet::Pheet::spawn(contains_wrapper, &set, (i + 12345) % ITERS);
         }
     }
 
-    fail_unless(set.size() == iters);
+    fail_unless(set.size() == ITERS);
 }
 END_TEST
 
@@ -171,11 +169,10 @@ START_TEST(smoke_3)
 {
     CuckooSet<pheet::Pheet, unsigned long> set;
 
-    const int iters = 123456;
     {
         pheet::Pheet::Environment env;
 
-        for (int i = 0; i < iters; i++) {
+        for (int i = 0; i < ITERS; i++) {
             pheet::Pheet::spawn(put_wrapper, &set, i);
         }
     }
@@ -183,7 +180,7 @@ START_TEST(smoke_3)
     {
         pheet::Pheet::Environment env;
 
-        for (int i = 0; i < iters; i++) {
+        for (int i = 0; i < ITERS; i++) {
             pheet::Pheet::spawn(remove_wrapper, &set, i);
         }
     }
