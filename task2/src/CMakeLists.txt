@@ -5,6 +5,7 @@ include_directories(
 add_library(cuckooset SHARED
     cuckooset.cpp
     hash.cpp
+    probeset.cpp
 )
 target_link_libraries(cuckooset ${CMAKE_THREAD_LIBS_INIT} ${HWLOC_LIBRARIES})
 
