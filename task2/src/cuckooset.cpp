@@ -6,40 +6,54 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::put(const TT &item)
 {
-    std::lock_guard<std::mutex> lock(the_mutex);
-    the_set.insert(item);
 }
 
 template <class Pheet, typename TT, class Comparator>
 bool
 CuckooSet<Pheet, TT, Comparator>::contains(const TT &item)
 {
-    std::lock_guard<std::mutex> lock(the_mutex);
-    return (the_set.find(item) != the_set.end());
+    return false;
 }
 
 template <class Pheet, typename TT, class Comparator>
 bool
 CuckooSet<Pheet, TT, Comparator>::remove(const TT &item)
 {
-    std::lock_guard<std::mutex> lock(the_mutex);
-    return (the_set.erase(item) > 0);
+    return false;
 }
 
 template <class Pheet, typename TT, class Comparator>
 bool
 CuckooSet<Pheet, TT, Comparator>::is_empty()
 {
-    std::lock_guard<std::mutex> lock(the_mutex);
-    return the_set.empty();
+    return size() == 0;
 }
 
 template <class Pheet, typename TT, class Comparator>
 size_t
 CuckooSet<Pheet, TT, Comparator>::size()
 {
-    std::lock_guard<std::mutex> lock(the_mutex);
-    return the_set.size();
+    return the_size.load();
+}
+
+template <class Pheet, typename TT, class Comparator>
+void
+CuckooSet<Pheet, TT, Comparator>::acquire(const TT &item)
+{
+    the_mutex.lock();
+}
+
+template <class Pheet, typename TT, class Comparator>
+void
+CuckooSet<Pheet, TT, Comparator>::release(const TT &item)
+{
+    the_mutex.unlock();
+}
+
+template <class Pheet, typename TT, class Comparator>
+void
+CuckooSet<Pheet, TT, Comparator>::resize()
+{
 }
 
 template <class Pheet, typename TT, class Comparator>
