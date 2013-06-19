@@ -31,6 +31,14 @@ template <class Pheet, typename TT, class Comparator>
 bool
 CuckooSet<Pheet, TT, Comparator>::contains(const TT &item)
 {
+    LockGuard lock(this, item);
+    return contains_nolock(item);
+}
+
+template <class Pheet, typename TT, class Comparator>
+bool
+CuckooSet<Pheet, TT, Comparator>::contains_nolock(const TT &item)
+{
     return false;
 }
 

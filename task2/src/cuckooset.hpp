@@ -33,6 +33,10 @@ private:
     void release(const TT &item);
     void resize();
 
+    /** Checks if the item is contained in this set.
+     * A lock must have been acquired before this function is called. */
+    bool contains_nolock(const TT &item);
+
 private:
     ProbeSet<TT, Comparator> *the_table[2];
     std::mutex the_mutex;
