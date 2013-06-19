@@ -8,6 +8,13 @@ ProbeSet<T, Comparator>::add(const T &item)
 }
 
 template<typename T, class Comparator>
+T
+ProbeSet<T, Comparator>::first() const
+{
+    return *the_set.begin();
+}
+
+template<typename T, class Comparator>
 bool
 ProbeSet<T, Comparator>::contains(const T &item) const
 {

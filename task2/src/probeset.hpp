@@ -13,6 +13,7 @@ class ProbeSet {
 public:
     void add(const T &item);
     bool contains(const T &item) const;
+    T first() const;
     void remove(const T &item);
     size_t size() const;
 
