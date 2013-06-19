@@ -149,6 +149,24 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::resize()
 {
+    std::lock_guard<std::mutex> lock(the_mutex);
+
+    const size_t prev_capacity = the_capacity;
+    the_capacity = prev_capacity * 2;
+
+    ProbeSet<TT, Comparator> *next0 = new ProbeSet<TT, Comparator>[the_capacity];
+    ProbeSet<TT, Comparator> *next1 = new ProbeSet<TT, Comparator>[the_capacity];
+
+    for (int i = 0; i < prev_capacity; i++) {
+        next0[i] = the_table[0][i];
+        next1[i] = the_table[1][i];
+    }
+
+    delete[] the_table[0];
+    delete[] the_table[1];
+
+    the_table[0] = next0;
+    the_table[1] = next1;
 }
 
 template <class Pheet, typename TT, class Comparator>
