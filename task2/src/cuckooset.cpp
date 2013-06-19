@@ -44,16 +44,20 @@ CuckooSet<Pheet, TT, Comparator>::put(const TT &item)
 
     if (set0->size() < PROBE_THRESHOLD) {
         set0->add(item);
+        the_size++;
         return;
     } else if (set1->size() < PROBE_THRESHOLD) {
         set1->add(item);
+        the_size++;
         return;
     } else if (set0->size() < PROBE_SIZE) {
         set0->add(item);
+        the_size++;
         i = 0;
         h = hash0;
     } else if (set1->size() < PROBE_SIZE) {
         set1->add(item);
+        the_size++;
         i = 1;
         h = hash1;
     } else {
@@ -96,6 +100,7 @@ CuckooSet<Pheet, TT, Comparator>::remove(const TT &item)
 
     if (set0->contains(item)) {
         set0->remove(item);
+        the_size--;
         return true;
     }
 
@@ -104,6 +109,7 @@ CuckooSet<Pheet, TT, Comparator>::remove(const TT &item)
 
     if (set1->contains(item)) {
         set1->remove(item);
+        the_size--;
         return true;
     }
 
