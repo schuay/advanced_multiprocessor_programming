@@ -38,6 +38,18 @@ private:
     std::mutex the_mutex;
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;
+
+private:
+    class LockGuard {
+    public:
+        LockGuard(CuckooSet<Pheet, TT, Comparator> *set, const TT &item)
+            : set(set), item(item) { set->acquire(item); }
+        ~LockGuard() { set->release(item); }
+
+    private:
+        CuckooSet<Pheet, TT, Comparator> *set;
+        const TT &item;
+    };
 };
 
 #endif /* __CUCKOOSET_H */

@@ -24,6 +24,7 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::put(const TT &item)
 {
+    LockGuard lock(this, item);
 }
 
 template <class Pheet, typename TT, class Comparator>
