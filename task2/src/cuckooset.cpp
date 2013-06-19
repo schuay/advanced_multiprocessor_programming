@@ -5,6 +5,7 @@
 #include "hash.hpp"
 
 #define INITIAL_CAPACITY (1024)
+#define RELOCATE_LIMIT (512)
 
 template <class Pheet, typename TT, class Comparator>
 CuckooSet<Pheet, TT, Comparator>::CuckooSet()
@@ -152,8 +153,44 @@ CuckooSet<Pheet, TT, Comparator>::resize()
 
 template <class Pheet, typename TT, class Comparator>
 bool
-CuckooSet<Pheet, TT, Comparator>::relocate(const int i, const size_t h)
+CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
 {
+    assert(k == 0 || k == 1);
+
+    size_t hi = h, hj;
+    int i = k;
+    int j = 1 - i;
+
+    for (int round = 0; round < RELOCATE_LIMIT; round++) {
+        ProbeSet<TT, Comparator> *set_i = the_table[i] + hi;
+        const TT y = set_i->first();
+        hj = ((i == 0) ? h1(y) : h0(y)) % the_capacity;
+
+        LockGuard lock(this, y);
+
+        ProbeSet<TT, Comparator> *set_j = the_table[j] + hj;
+
+        if (set_i->contains(y)) {
+            set_i->remove(y);
+            if (set_j->size() < PROBE_THRESHOLD) {
+                set_j->add(y);
+                return true;
+            } else if (set_j->size() < PROBE_SIZE) {
+                set_j->add(y);
+                j = i;
+                i = 1 - i;
+                hi = hj;
+            } else {
+                set_i->add(y);
+                return false;
+            }
+        } else if (set_i->size() >= PROBE_THRESHOLD) {
+           continue;
+        } else {
+           return true;
+        }
+    }
+
     return false;
 }
 

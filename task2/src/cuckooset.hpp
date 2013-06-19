@@ -32,7 +32,7 @@ private:
     void acquire(const TT &item);
     void release(const TT &item);
     void resize();
-    bool relocate(const int i, const size_t h);
+    bool relocate(const int k, const size_t h);
 
     /** Checks if the item is contained in this set.
      * A lock must have been acquired before this function is called. */
