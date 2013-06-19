@@ -89,6 +89,24 @@ template <class Pheet, typename TT, class Comparator>
 bool
 CuckooSet<Pheet, TT, Comparator>::remove(const TT &item)
 {
+    LockGuard lock(this, item);
+
+    const size_t hash0 = h0(item) % the_capacity;
+    ProbeSet<TT, Comparator> *set0 = the_table[0] + hash0;
+
+    if (set0->contains(item)) {
+        set0->remove(item);
+        return true;
+    }
+
+    const size_t hash1 = h1(item) % the_capacity;
+    ProbeSet<TT, Comparator> *set1 = the_table[1] + hash1;
+
+    if (set1->contains(item)) {
+        set1->remove(item);
+        return true;
+    }
+
     return false;
 }
 
