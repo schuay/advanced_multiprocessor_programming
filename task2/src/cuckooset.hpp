@@ -47,12 +47,28 @@ private:
     class LockGuard {
     public:
         LockGuard(CuckooSet<Pheet, TT, Comparator> *set, const TT &item)
-            : set(set), item(item) { set->acquire(item); }
-        ~LockGuard() { set->release(item); }
+            : set(set), item(item), is_released(false)
+        {
+            set->acquire(item);
+        }
+
+        void release()
+        {
+            set->release(item);
+            is_released = true;
+        }
+
+        ~LockGuard()
+        {
+            if (!is_released) {
+                set->release(item);
+            }
+        }
 
     private:
         CuckooSet<Pheet, TT, Comparator> *set;
         const TT &item;
+        bool is_released;
     };
 };
 
