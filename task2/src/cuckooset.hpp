@@ -16,8 +16,8 @@ template <class Pheet,
           class Comparator = std::less<TT> >
 class CuckooSet {
 public:
-    CuckooSet() { }
-    virtual ~CuckooSet() { }
+    CuckooSet();
+    virtual ~CuckooSet();
 
     void put(const TT &item);
     bool contains(const TT &item);
@@ -37,6 +37,7 @@ private:
     ProbeSet<TT, Comparator> *the_table[2];
     std::mutex the_mutex;
     std::atomic<size_t> the_size;
+    std::atomic<size_t> the_capacity;
 };
 
 #endif /* __CUCKOOSET_H */

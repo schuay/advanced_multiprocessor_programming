@@ -2,6 +2,23 @@
 
 #include <iostream>
 
+#define INITIAL_CAPACITY (1024)
+
+template <class Pheet, typename TT, class Comparator>
+CuckooSet<Pheet, TT, Comparator>::CuckooSet()
+{
+    the_capacity = INITIAL_CAPACITY;
+    the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
+    the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
+}
+
+template <class Pheet, typename TT, class Comparator>
+CuckooSet<Pheet, TT, Comparator>::~CuckooSet()
+{
+    delete[] the_table[0];
+    delete[] the_table[1];
+}
+
 template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::put(const TT &item)
