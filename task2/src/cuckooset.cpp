@@ -163,6 +163,8 @@ CuckooSet<Pheet, TT, Comparator>::resize()
     ProbeSet<TT, Comparator> *next0 = new ProbeSet<TT, Comparator>[the_capacity];
     ProbeSet<TT, Comparator> *next1 = new ProbeSet<TT, Comparator>[the_capacity];
 
+    /* TODO: Incorrect; we need to re-add all of these elements with put(). */
+
     for (int i = 0; i < prev_capacity; i++) {
         next0[i] = the_table[0][i];
         next1[i] = the_table[1][i];
@@ -186,6 +188,9 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
     int j = 1 - i;
 
     for (int round = 0; round < RELOCATE_LIMIT; round++) {
+        /* Might be problematic: No lock is held at this point, but
+         * we go ahead and access the set anyway. For example, the ProbeSet could
+         * be deleted while we're in here. */
         ProbeSet<TT, Comparator> *set_i = the_table[i] + hi;
         const TT y = set_i->first();
         hj = ((i == 0) ? h1(y) : h0(y)) % the_capacity;
