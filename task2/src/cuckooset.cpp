@@ -87,7 +87,13 @@ template <class Pheet, typename TT, class Comparator>
 bool
 CuckooSet<Pheet, TT, Comparator>::contains_nolock(const TT &item)
 {
-    return false;
+    const size_t hash0 = h0(item) % the_capacity;
+    ProbeSet<TT, Comparator> *set0 = the_table[0] + hash0;
+
+    const size_t hash1 = h1(item) % the_capacity;
+    ProbeSet<TT, Comparator> *set1 = the_table[1] + hash1;
+
+    return (set0->contains(item) || set1->contains(item));
 }
 
 template <class Pheet, typename TT, class Comparator>
