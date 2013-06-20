@@ -188,14 +188,15 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
     int j = 1 - i;
 
     for (int round = 0; round < RELOCATE_LIMIT; round++) {
-        /* Might be problematic: No lock is held at this point, but
-         * we go ahead and access the set anyway. For example, the ProbeSet could
-         * be deleted while we're in here. */
+        /* TODO: Temporary fix for accessing set_i without a lock, which
+         * leads to segfaults and other problems. */
+        std::lock_guard<std::mutex> lock(the_mutex);
+
         ProbeSet<TT, Comparator> *set_i = the_table[i] + hi;
         const TT y = set_i->first();
         hj = ((i == 0) ? h1(y) : h0(y)) % the_capacity;
 
-        LockGuard lock(this, y);
+        /* LockGuard lock(this, y); */
 
         ProbeSet<TT, Comparator> *set_j = the_table[j] + hj;
 
