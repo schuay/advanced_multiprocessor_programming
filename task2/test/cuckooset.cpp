@@ -102,6 +102,10 @@ START_TEST(remove_1)
     }
     fail_unless(set.size() == size);
 
+    /* The following element is part of the random sequence, but
+     * got lost somehow. Ensure it's actually in the set. */
+    fail_unless(set.contains(424036140));
+
     srand(42);
 
     for (int i = 0; i < ITERS; i++) {
