@@ -8,6 +8,7 @@ template <class Pheet, typename TT, class Comparator>
 CuckooSet<Pheet, TT, Comparator>::CuckooSet()
 {
     the_capacity = INITIAL_CAPACITY;
+    the_size = 0;
     the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
     the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
 }
