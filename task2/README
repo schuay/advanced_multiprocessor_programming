@@ -20,7 +20,7 @@ Dependencies
 For this task, we used revision 420. After pulling pheet itself, make sure
 to point CMake to the correct directory.
 
-To integrate the PCN into pheet's benchmarks:
+To integrate the cuckoo set into pheet's benchmarks:
 
 * Include our cuckooset.hpp in test/set_bench/SetBench.cpp
 * Add a new run_bench() call to run_test()
