@@ -163,7 +163,6 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::resize()
 {
-    //the_mutex.lock();
     LockGuardAll locks(this);
 
     const size_t prev_capacity = the_capacity;
@@ -177,9 +176,8 @@ CuckooSet<Pheet, TT, Comparator>::resize()
 
     the_size = 0;
 
-    //the_mutex.unlock();
     locks.release();
-    
+
     for (int i = 0; i < prev_capacity; i++) {
         ProbeSet<TT, Comparator> *p = prev0 + i;
         while (p->size() > 0) {
@@ -195,6 +193,7 @@ CuckooSet<Pheet, TT, Comparator>::resize()
             put(elem);
         }
     }
+
     delete[] prev0;
     delete[] prev1;
 }
@@ -210,13 +209,6 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
     int j = 1 - i;
 
     for (int round = 0; round < RELOCATE_LIMIT; round++) {
-        /* TODO: Temporary fix for accessing set_i without a lock, which
-         * leads to segfaults and other problems. */
-        //Works for me without this additional lock operation.
-        //std::lock_guard<std::mutex> lock(the_mutex);
-        //LockGuardAll locks(this);
-        
-        
         ProbeSet<TT, Comparator> *set_i = the_table[i] + hi;
         const TT y = set_i->first();
         hj = ((i == 0) ? h1(y) : h0(y)) % the_capacity;

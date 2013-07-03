@@ -3,7 +3,6 @@
 
 #include <atomic>
 #include <mutex>
-#include <vector>
 #include <pheet/pheet.h>
 
 #include "probeset.hpp"
@@ -45,7 +44,7 @@ private:
     std::mutex the_mutex;
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;
-    
+
     static const size_t LOCK_CAPACITY = 5;
 
 private:
@@ -96,7 +95,7 @@ private:
         {
             releaseAll();
         }
-    
+
     private:
         void releaseAll()
         {
@@ -105,9 +104,9 @@ private:
                     set->the_lock[0][i].unlock();
                 }
             }
-            is_released=true;
+            is_released = true;
         }
-    
+
     private:
         CuckooSet<Pheet, TT, Comparator> *set;
         bool is_released;
