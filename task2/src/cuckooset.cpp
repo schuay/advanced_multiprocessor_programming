@@ -146,8 +146,6 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::acquire(const TT &item)
 {
-    //TODO: why do we get seg-faults and other ugly things if we remove this lock operation?
-    //the_mutex is only used here and in release(const TT &item)
     the_lock[0][h0(item) % LOCK_CAPACITY].lock();
     the_lock[1][h1(item) % LOCK_CAPACITY].lock();
 }
