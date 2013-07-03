@@ -6,6 +6,7 @@
 
 #define INITIAL_CAPACITY (1024)
 #define RELOCATE_LIMIT (512)
+#define LOCK_CAPACITY (5)
 
 template <class Pheet, typename TT, class Comparator>
 CuckooSet<Pheet, TT, Comparator>::CuckooSet()
@@ -163,7 +164,7 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::resize()
 {
-    LockGuardAll locks(this);
+    GlobalLockGuard locks(this);
 
     const size_t prev_capacity = the_capacity;
     the_capacity = prev_capacity * 2;
@@ -246,6 +247,71 @@ void
 CuckooSet<Pheet, TT, Comparator>::print_name()
 {
     std::cout << "CuckooSet"; 
+}
+
+template <class Pheet, typename TT, class Comparator>
+CuckooSet<Pheet, TT, Comparator>::
+LockGuard::LockGuard(CuckooSet<Pheet, TT, Comparator> *set,
+                     const TT &item)
+    : set(set), item(item), is_released(false)
+{
+    set->acquire(item);
+}
+
+template <class Pheet, typename TT, class Comparator>
+CuckooSet<Pheet, TT, Comparator>::
+LockGuard::~LockGuard()
+{
+    if (!is_released) {
+        set->release(item);
+    }
+}
+
+template <class Pheet, typename TT, class Comparator>
+void
+CuckooSet<Pheet, TT, Comparator>::
+LockGuard::release()
+{
+    set->release(item);
+    is_released = true;
+}
+
+template <class Pheet, typename TT, class Comparator>
+CuckooSet<Pheet, TT, Comparator>::
+GlobalLockGuard::GlobalLockGuard(CuckooSet<Pheet, TT, Comparator> *set)
+    : set(set), is_released(false)
+{
+    for (int i = 0; i < LOCK_CAPACITY; i++) {
+        set->the_lock[0][i].lock();
+    }
+}
+
+template <class Pheet, typename TT, class Comparator>
+CuckooSet<Pheet, TT, Comparator>::
+GlobalLockGuard::~GlobalLockGuard()
+{
+    releaseAll();
+}
+
+template <class Pheet, typename TT, class Comparator>
+void
+CuckooSet<Pheet, TT, Comparator>::
+GlobalLockGuard::release()
+{
+    releaseAll();
+}
+
+template <class Pheet, typename TT, class Comparator>
+void
+CuckooSet<Pheet, TT, Comparator>::
+GlobalLockGuard::releaseAll()
+{
+    if (!is_released) {
+        for (int i = 0; i < LOCK_CAPACITY; i++) {
+            set->the_lock[0][i].unlock();
+        }
+    }
+    is_released = true;
 }
 
 template class CuckooSet<

@@ -45,29 +45,12 @@ private:
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;
 
-    static const size_t LOCK_CAPACITY = 5;
-
 private:
     class LockGuard {
     public:
-        LockGuard(CuckooSet<Pheet, TT, Comparator> *set, const TT &item)
-            : set(set), item(item), is_released(false)
-        {
-            set->acquire(item);
-        }
-
-        void release()
-        {
-            set->release(item);
-            is_released = true;
-        }
-
-        ~LockGuard()
-        {
-            if (!is_released) {
-                set->release(item);
-            }
-        }
+        LockGuard(CuckooSet<Pheet, TT, Comparator> *set, const TT &item);
+        ~LockGuard();
+        void release();
 
     private:
         CuckooSet<Pheet, TT, Comparator> *set;
@@ -75,37 +58,14 @@ private:
         bool is_released;
     };
 
-private:
-    class LockGuardAll {
+    class GlobalLockGuard {
     public:
-        LockGuardAll(CuckooSet<Pheet, TT, Comparator> *set)
-            : set(set), is_released(false)
-        {
-            for (int i = 0; i < LOCK_CAPACITY; i++) {
-                set->the_lock[0][i].lock();
-            }
-        }
-
-        void release()
-        {
-            releaseAll();
-        }
-
-        ~LockGuardAll()
-        {
-            releaseAll();
-        }
+        GlobalLockGuard(CuckooSet<Pheet, TT, Comparator> *set);
+        ~GlobalLockGuard();
+        void release();
 
     private:
-        void releaseAll()
-        {
-            if (!is_released) {
-                for (int i = 0; i < LOCK_CAPACITY; i++) {
-                    set->the_lock[0][i].unlock();
-                }
-            }
-            is_released = true;
-        }
+        void releaseAll();
 
     private:
         CuckooSet<Pheet, TT, Comparator> *set;
