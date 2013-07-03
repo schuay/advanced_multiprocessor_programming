@@ -201,14 +201,13 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
 {
     assert(k == 0 || k == 1);
 
+    GlobalLockGuard lock(this);
+
     size_t hi = h, hj;
     int i = k;
     int j = 1 - i;
 
     for (int round = 0; round < RELOCATE_LIMIT; round++) {
-        std::recursive_mutex *m = the_lock[i] + hi % LOCK_CAPACITY;
-        m->lock();
-
         ProbeSet<TT, Comparator> *set_i = the_table[i] + hi % the_capacity;
         if (set_i->size() == 0) {
             return false;
@@ -216,9 +215,6 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
 
         const TT y = set_i->first();
         hj = (i == 0) ? h1(y) : h0(y);
-
-        m->unlock();
-        LockGuard lock(this, y);
 
         set_i = the_table[i] + hi % the_capacity;
         ProbeSet<TT, Comparator> *set_j = the_table[j] + hj % the_capacity;
