@@ -38,11 +38,11 @@ CuckooSet<Pheet, TT, Comparator>::put(const TT &item)
         return;
     }
 
-    const size_t hash0 = h0(item) % the_capacity;
-    const size_t hash1 = h1(item) % the_capacity;
+    const size_t hash0 = h0(item);
+    const size_t hash1 = h1(item);
 
-    ProbeSet<TT, Comparator> *set0 = the_table[0] + hash0;
-    ProbeSet<TT, Comparator> *set1 = the_table[1] + hash1;
+    ProbeSet<TT, Comparator> *set0 = the_table[0] + hash0 % the_capacity;
+    ProbeSet<TT, Comparator> *set1 = the_table[1] + hash1 % the_capacity;
 
     int i = -1;
     size_t h;
@@ -206,13 +206,18 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
     int j = 1 - i;
 
     for (int round = 0; round < RELOCATE_LIMIT; round++) {
-        ProbeSet<TT, Comparator> *set_i = the_table[i] + hi;
-        const TT y = set_i->first();
-        hj = ((i == 0) ? h1(y) : h0(y)) % the_capacity;
+        std::recursive_mutex *m = the_lock[i] + hi % LOCK_CAPACITY;
+        m->lock();
 
+        ProbeSet<TT, Comparator> *set_i = the_table[i] + hi % the_capacity;
+        const TT y = set_i->first();
+        hj = (i == 0) ? h1(y) : h0(y);
+
+        m->unlock();
         LockGuard lock(this, y);
 
-        ProbeSet<TT, Comparator> *set_j = the_table[j] + hj;
+        set_i = the_table[i] + hi % the_capacity;
+        ProbeSet<TT, Comparator> *set_j = the_table[j] + hj % the_capacity;
 
         if (set_i->contains(y)) {
             set_i->remove(y);
