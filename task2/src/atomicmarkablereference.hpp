@@ -47,7 +47,8 @@ public:
    std::thread::id get(bool *mark)
    {
      *mark = the_value & 1;
-     return  *((std::thread::id *) (the_value >> 1));
+     uint64_t val = (the_value >> 1);
+     return  *((std::thread::id *) &val);
    }
 
 private:

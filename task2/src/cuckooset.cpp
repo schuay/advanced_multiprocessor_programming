@@ -15,8 +15,11 @@ CuckooSet<Pheet, TT, Comparator>::CuckooSet()
     the_size = 0;
     the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
     the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
-    the_lock[0] = new std::recursive_mutex[LOCK_CAPACITY];
-    the_lock[1] = new std::recursive_mutex[LOCK_CAPACITY];
+
+    std::recursive_mutex *tmp[2];
+	tmp[0] = new std::recursive_mutex[the_capacity];
+    tmp[1] = new std::recursive_mutex[the_capacity];
+    the_lock = &tmp;
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -24,8 +27,8 @@ CuckooSet<Pheet, TT, Comparator>::~CuckooSet()
 {
     delete[] the_table[0];
     delete[] the_table[1];
-    delete[] the_lock[0];
-    delete[] the_lock[1];
+    delete[] (*the_lock)[0];
+    delete[] (*the_lock)[1];
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -148,16 +151,38 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::acquire(const TT &item)
 {
-    the_lock[0][h0(item) % LOCK_CAPACITY].lock();
-    the_lock[1][h1(item) % LOCK_CAPACITY].lock();
+    bool mark;
+    std::thread::id me = std::this_thread::get_id();
+    std::thread::id who;
+    while(true) {
+        do {
+            who = the_owner.get(&mark);
+        } while(mark && who != me);
+
+        auto prev_lock = the_lock;
+        const size_t hash0 = h0(item) % the_capacity;
+        const size_t hash1 = h1(item) % the_capacity;
+        std::recursive_mutex *prev_lock0 = (*prev_lock)[0] + hash0;
+        std::recursive_mutex *prev_lock1 = (*prev_lock)[1] + hash1;
+        prev_lock0->lock();
+        prev_lock1->lock();
+
+        who = the_owner.get(&mark);
+        if((!mark || who == me) && the_lock == prev_lock) {
+            return;
+        } else {
+            prev_lock0->unlock();
+            prev_lock1->unlock();
+        }
+    }
 }
 
 template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::release(const TT &item)
 {
-    the_lock[0][h0(item) % LOCK_CAPACITY].unlock();
-    the_lock[1][h1(item) % LOCK_CAPACITY].unlock();
+    the_lock[0][h0(item) % the_capacity]->unlock();
+    the_lock[1][h1(item) % the_capacity]->unlock();
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -174,7 +199,7 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
     the_capacity = prev_capacity * 2;
     std::thread::id me = std::this_thread::get_id();
 
-    if(owner.attemptMark(me, true)) {
+    if(the_owner.attemptMark(me, true)) {
 
         if(the_size != prev_capacity)
             return;
@@ -188,6 +213,14 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 
         the_size = 0;
 
+        auto prev_lock = the_lock;
+        std::recursive_mutex *tmp[2];
+	    tmp[0] = new std::recursive_mutex[the_capacity];
+        tmp[1] = new std::recursive_mutex[the_capacity];
+        the_lock = &tmp;
+        delete [] (*prev_lock)[0];
+        delete [] (*prev_lock)[1];
+
         for (int i = 0; i < prev_capacity; i++) {
             ProbeSet<TT, Comparator> *p = prev0 + i;
             while (p->size() > 0) {
@@ -195,7 +228,6 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
                 p->remove(elem);
                 put(elem);
             }
-
             p = prev1 + i;
             while (p->size() > 0) {
                 TT elem = p->first();
@@ -206,6 +238,7 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 
         delete[] prev0;
         delete[] prev1;
+        the_owner.reset();
     }
 }
 
@@ -215,7 +248,7 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
 {
     assert(k == 0 || k == 1);
 
-    GlobalLockGuard lock(this);
+    //GlobalLockGuard lock(this);
 
     size_t hi = h, hj;
     int i = k;
@@ -253,7 +286,6 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
            return true;
         }
     }
-
     return false;
 }
 
@@ -266,15 +298,16 @@ CuckooSet<Pheet, TT, Comparator>::print_name()
 
 template <class Pheet, typename TT, class Comparator>
 void
-quiesce()
+CuckooSet<Pheet, TT, Comparator>::quiesce()
 {
     /*TODO: this method is supposed to wait until all locks are unlocked.
     The book uses lock.isLocked() for this, but since std::mutex doesn't provide such a method,
     this is the only way to do it. Might be bad for performance if the locks are not locked'*/
-    for(int i = 0; i < the_size; i++) {
+    for(int i = 0; i < the_capacity; i++) {
         the_lock[0][i]->lock();
         the_lock[0][i]->unlock();
     }
+}
 
 template <class Pheet, typename TT, class Comparator>
 CuckooSet<Pheet, TT, Comparator>::
@@ -308,8 +341,8 @@ CuckooSet<Pheet, TT, Comparator>::
 GlobalLockGuard::GlobalLockGuard(CuckooSet<Pheet, TT, Comparator> *set)
     : set(set), is_released(false)
 {
-    for (int i = 0; i < LOCK_CAPACITY; i++) {
-        set->the_lock[0][i].lock();
+    for (int i = 0; i < set->the_capacity; i++) {
+        set->the_lock[0][i]->lock();
     }
 }
 
@@ -334,8 +367,8 @@ CuckooSet<Pheet, TT, Comparator>::
 GlobalLockGuard::releaseAll()
 {
     if (!is_released) {
-        for (int i = 0; i < LOCK_CAPACITY; i++) {
-            set->the_lock[0][i].unlock();
+        for (int i = 0; i < set->the_capacity; i++) {
+            set->the_lock[0][i]->unlock();
         }
     }
     is_released = true;
