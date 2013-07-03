@@ -221,7 +221,7 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
         const TT y = set_i->first();
         hj = ((i == 0) ? h1(y) : h0(y)) % the_capacity;
 
-        /* LockGuard lock(this, y); */
+        LockGuard lock(this, y);
 
         ProbeSet<TT, Comparator> *set_j = the_table[j] + hj;
 
