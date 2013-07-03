@@ -38,6 +38,8 @@ CuckooSet<Pheet, TT, Comparator>::put(const TT &item)
         return;
     }
 
+    const size_t capacity = the_capacity;
+
     const size_t hash0 = h0(item);
     const size_t hash1 = h1(item);
 
@@ -73,10 +75,10 @@ CuckooSet<Pheet, TT, Comparator>::put(const TT &item)
     lock.release();
 
     if (must_resize) {
-        resize();
+        resize(capacity);
         put(item);
     } else if (i != -1 && !relocate(i, h)) {
-        resize();
+        resize(capacity);
     }
 }
 
@@ -160,9 +162,13 @@ CuckooSet<Pheet, TT, Comparator>::release(const TT &item)
 
 template <class Pheet, typename TT, class Comparator>
 void
-CuckooSet<Pheet, TT, Comparator>::resize()
+CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 {
     GlobalLockGuard locks(this);
+
+    if (capacity != the_capacity) {
+        return;
+    }
 
     const size_t prev_capacity = the_capacity;
     the_capacity = prev_capacity * 2;

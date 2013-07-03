@@ -31,7 +31,7 @@ public:
 private:
     void acquire(const TT &item);
     void release(const TT &item);
-    void resize();
+    void resize(const size_t capacity);
     bool relocate(const int k, const size_t h);
 
     /** Checks if the item is contained in this set.
