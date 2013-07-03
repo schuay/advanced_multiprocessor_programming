@@ -40,7 +40,7 @@ private:
 
 private:
     ProbeSet<TT, Comparator> *the_table[2];
-    std::mutex *the_lock[2];
+    std::recursive_mutex *the_lock[2];
     std::mutex the_mutex;
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;

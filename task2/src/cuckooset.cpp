@@ -15,8 +15,8 @@ CuckooSet<Pheet, TT, Comparator>::CuckooSet()
     the_size = 0;
     the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
     the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
-    the_lock[0] = new std::mutex[LOCK_CAPACITY];
-    the_lock[1] = new std::mutex[LOCK_CAPACITY];
+    the_lock[0] = new std::recursive_mutex[LOCK_CAPACITY];
+    the_lock[1] = new std::recursive_mutex[LOCK_CAPACITY];
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -176,8 +176,6 @@ CuckooSet<Pheet, TT, Comparator>::resize()
     the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
 
     the_size = 0;
-
-    locks.release();
 
     for (int i = 0; i < prev_capacity; i++) {
         ProbeSet<TT, Comparator> *p = prev0 + i;
