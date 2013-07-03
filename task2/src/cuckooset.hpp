@@ -6,6 +6,7 @@
 #include <pheet/pheet.h>
 
 #include "probeset.hpp"
+#include "atomicmarkablereference.hpp"
 
 /**
  * A set implemented using cuckoo hashing.
