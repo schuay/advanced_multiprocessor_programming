@@ -164,7 +164,7 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 {
-    GlobalLockGuard locks(this);
+    //GlobalLockGuard locks(this);
 
     if (capacity != the_capacity) {
         return;
@@ -172,33 +172,41 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 
     const size_t prev_capacity = the_capacity;
     the_capacity = prev_capacity * 2;
+    std::thread::id me = std::this_thread::get_id();
 
-    ProbeSet<TT, Comparator> *prev0 = the_table[0];
-    ProbeSet<TT, Comparator> *prev1 = the_table[1];
+    if(owner.attemptMark(me, true)) {
 
-    the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
-    the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
+        if(the_size != prev_capacity)
+            return;
+        quiesce();
 
-    the_size = 0;
+        ProbeSet<TT, Comparator> *prev0 = the_table[0];
+        ProbeSet<TT, Comparator> *prev1 = the_table[1];
 
-    for (int i = 0; i < prev_capacity; i++) {
-        ProbeSet<TT, Comparator> *p = prev0 + i;
-        while (p->size() > 0) {
-            TT elem = p->first();
-            p->remove(elem);
-            put(elem);
+        the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
+        the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
+
+        the_size = 0;
+
+        for (int i = 0; i < prev_capacity; i++) {
+            ProbeSet<TT, Comparator> *p = prev0 + i;
+            while (p->size() > 0) {
+                TT elem = p->first();
+                p->remove(elem);
+                put(elem);
+            }
+
+            p = prev1 + i;
+            while (p->size() > 0) {
+                TT elem = p->first();
+                p->remove(elem);
+                put(elem);
+            }
         }
 
-        p = prev1 + i;
-        while (p->size() > 0) {
-            TT elem = p->first();
-            p->remove(elem);
-            put(elem);
-        }
+        delete[] prev0;
+        delete[] prev1;
     }
-
-    delete[] prev0;
-    delete[] prev1;
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -255,6 +263,18 @@ CuckooSet<Pheet, TT, Comparator>::print_name()
 {
     std::cout << "CuckooSet"; 
 }
+
+template <class Pheet, typename TT, class Comparator>
+void
+quiesce()
+{
+    /*TODO: this method is supposed to wait until all locks are unlocked.
+    The book uses lock.isLocked() for this, but since std::mutex doesn't provide such a method,
+    this is the only way to do it. Might be bad for performance if the locks are not locked'*/
+    for(int i = 0; i < the_size; i++) {
+        the_lock[0][i]->lock();
+        the_lock[0][i]->unlock();
+    }
 
 template <class Pheet, typename TT, class Comparator>
 CuckooSet<Pheet, TT, Comparator>::

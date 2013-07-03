@@ -38,6 +38,8 @@ private:
     /** Checks if the item is contained in this set.
      * A lock must have been acquired before this function is called. */
     bool contains_nolock(const TT &item);
+    void quiesce();
+
 
 private:
     ProbeSet<TT, Comparator> *the_table[2];
@@ -45,7 +47,7 @@ private:
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;
 
-    AtomicMarkableReference owner;
+    AtomicMarkableReference the_owner;
 
 private:
     class LockGuard {
