@@ -45,6 +45,8 @@ private:
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;
 
+    AtomicMarkableReference owner;
+
 private:
     class LockGuard {
     public:
