@@ -14,10 +14,8 @@ CuckooSet<Pheet, TT, Comparator>::CuckooSet()
     the_size = 0;
     the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
     the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
-    for(int i = 0; i < LOCK_CAPACITY; i++) {
-        the_lock[0][i] = new std::mutex;
-        the_lock[1][i] = new std::mutex;
-    }
+    the_lock[0] = new std::mutex[LOCK_CAPACITY];
+    the_lock[1] = new std::mutex[LOCK_CAPACITY];
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -25,10 +23,8 @@ CuckooSet<Pheet, TT, Comparator>::~CuckooSet()
 {
     delete[] the_table[0];
     delete[] the_table[1];
-    for(int i = 0; i < LOCK_CAPACITY; i++) {
-        delete the_lock[0][i];
-        delete the_lock[1][i];
-    }
+    delete[] the_lock[0];
+    delete[] the_lock[1];
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -151,18 +147,16 @@ CuckooSet<Pheet, TT, Comparator>::acquire(const TT &item)
 {
     //TODO: why do we get seg-faults and other ugly things if we remove this lock operation?
     //the_mutex is only used here and in release(const TT &item)
-    the_mutex.lock();
-    the_lock[0][h0(item) % LOCK_CAPACITY]->lock();
-    the_lock[1][h1(item) % LOCK_CAPACITY]->lock();
+    the_lock[0][h0(item) % LOCK_CAPACITY].lock();
+    the_lock[1][h1(item) % LOCK_CAPACITY].lock();
 }
 
 template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::release(const TT &item)
 {
-    the_mutex.unlock();
-    the_lock[0][h0(item) % LOCK_CAPACITY]->unlock();
-    the_lock[1][h1(item) % LOCK_CAPACITY]->unlock();
+    the_lock[0][h0(item) % LOCK_CAPACITY].unlock();
+    the_lock[1][h1(item) % LOCK_CAPACITY].unlock();
 }
 
 template <class Pheet, typename TT, class Comparator>

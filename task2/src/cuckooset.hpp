@@ -41,12 +41,12 @@ private:
 
 private:
     ProbeSet<TT, Comparator> *the_table[2];
+    std::mutex *the_lock[2];
     std::mutex the_mutex;
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;
     
     static const size_t LOCK_CAPACITY = 5;
-    std::mutex *the_lock[2][LOCK_CAPACITY];
 
 private:
     class LockGuard {
@@ -82,9 +82,8 @@ private:
         LockGuardAll(CuckooSet<Pheet, TT, Comparator> *set)
             : set(set), is_released(false)
         {
-            //set->the_mutex.lock();
-            for(int i = 0; i < LOCK_CAPACITY; i++) {
-                set->the_lock[0][i]->lock();
+            for (int i = 0; i < LOCK_CAPACITY; i++) {
+                set->the_lock[0][i].lock();
             }
         }
 
@@ -101,12 +100,10 @@ private:
     private:
         void releaseAll()
         {
-            if(!is_released) {
-                for(int i = 0; i < LOCK_CAPACITY; i++) {
-                    set->the_lock[0][i]->unlock(); 
-                    
-                } 
-                //set->the_mutex.unlock();  
+            if (!is_released) {
+                for (int i = 0; i < LOCK_CAPACITY; i++) {
+                    set->the_lock[0][i].unlock();
+                }
             }
             is_released=true;
         }
