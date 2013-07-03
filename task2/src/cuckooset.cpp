@@ -210,6 +210,10 @@ CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
         m->lock();
 
         ProbeSet<TT, Comparator> *set_i = the_table[i] + hi % the_capacity;
+        if (set_i->size() == 0) {
+            return false;
+        }
+
         const TT y = set_i->first();
         hj = (i == 0) ? h1(y) : h0(y);
 
