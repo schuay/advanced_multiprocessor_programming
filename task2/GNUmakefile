@@ -9,6 +9,7 @@ REMOTEDIR = ~/advanced_multiprocessor_programming/task2
 REMOTEPHEETDIR = ~
 SOURCE = . ../CMakeModules
 PHEETDIR = ../../pheet
+AMPDIR = ../advanced_multiprocessor_programming/task2/build/src/
 
 all: check
 
@@ -20,7 +21,7 @@ check: bake
 	cd build; ctest --output-on-failure
 
 bench:
-	cd $(PHEETDIR) && make clean test && bin/pheet_test
+	cd $(PHEETDIR) && make test && LD_LIBRARY_PATH=$(AMPDIR) bin/pheet_test
 
 hand-in:
 	$(RSYNC) $(RFLAGS) $(PHEETDIR) $(HOST):$(REMOTEPHEETDIR)
