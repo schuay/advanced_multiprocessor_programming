@@ -195,20 +195,15 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 {
-    if (capacity != the_capacity) {
-        return;
-    }
-
     const size_t prev_capacity = the_capacity;
-    the_capacity = prev_capacity * 2;
     std::thread::id me = std::this_thread::get_id();
 
     if(the_owner.attemptMark(me, true)) {
 
-        if(the_size != prev_capacity)
+        if(the_capacity != prev_capacity)
             return;
         quiesce();
-
+        the_capacity = prev_capacity * 2;
         ProbeSet<TT, Comparator> *prev0 = the_table[0];
         ProbeSet<TT, Comparator> *prev1 = the_table[1];
 

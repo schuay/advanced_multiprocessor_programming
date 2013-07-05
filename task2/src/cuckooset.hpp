@@ -8,6 +8,7 @@
 #include "probeset.hpp"
 #include "atomicmarkablereference.hpp"
 
+
 /**
  * A set implemented using cuckoo hashing.
  */
@@ -43,14 +44,13 @@ private:
 
 private:
     ProbeSet<TT, Comparator> *the_table[2];
+    std::atomic<size_t> the_size;
+    std::atomic<size_t> the_capacity;
     /* TODO: this decalration required here (instead of locally in constructor) so that dereferencing
      * pointers to this member works. But why?
     */
     std::recursive_mutex *tmp[2];
     std::recursive_mutex *(*the_lock)[2];
-    std::atomic<size_t> the_size;
-    std::atomic<size_t> the_capacity;
-
     AtomicMarkableReference the_owner;
 
 private:
