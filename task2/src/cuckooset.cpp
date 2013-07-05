@@ -24,6 +24,9 @@ CuckooSet<Pheet, TT, Comparator>::~CuckooSet()
     delete[] the_table[0];
     delete[] the_table[1];
     delete the_lock;
+    for (auto it = old_locks.begin(); it != old_locks.end(); it++) {
+        delete *it;
+    }
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -202,7 +205,7 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
         the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
         the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
 
-        CuckooLock<TT> *prev_lock = the_lock;
+        old_locks.push_back(the_lock);
         the_lock = new CuckooLock<TT>(the_capacity);
 
         for (size_t i = 0; i < prev_capacity; i++) {

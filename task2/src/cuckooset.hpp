@@ -4,6 +4,7 @@
 #include <atomic>
 #include <mutex>
 #include <pheet/pheet.h>
+#include <vector>
 
 #include "atomicmarkablereference.hpp"
 #include "cuckoolock.hpp"
@@ -47,6 +48,7 @@ private:
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;
     CuckooLock<TT> *the_lock;
+    std::vector<CuckooLock<TT> *> old_locks;
     AtomicMarkableReference the_owner;
 
 private:
