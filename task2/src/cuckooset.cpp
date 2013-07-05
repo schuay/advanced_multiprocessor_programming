@@ -204,8 +204,6 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 
         CuckooLock<TT> *prev_lock = the_lock;
         the_lock = new CuckooLock<TT>(the_capacity);
-        delete prev_lock;
-
 
         for (size_t i = 0; i < prev_capacity; i++) {
             ProbeSet<TT, Comparator> *p = prev0 + i;
