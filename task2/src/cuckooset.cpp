@@ -156,13 +156,13 @@ CuckooSet<Pheet, TT, Comparator>::acquire(const TT &item)
         /* We'd need atomic_load(shared_ptr) here, but libstdc++ does not implement
          * it yet (even though it's in the C++11 standard :(. */
         std::shared_ptr<CuckooLock<TT> > prev_lock = the_lock;
-        the_lock->lock(item);
+        prev_lock->lock(item);
 
         who = the_owner.get(&mark);
         if((!mark || who == me) && the_lock == prev_lock) {
             return;
         } else {
-            the_lock->unlock(item);
+            prev_lock->unlock(item);
         }
     }
 }
