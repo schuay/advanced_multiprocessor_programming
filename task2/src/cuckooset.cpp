@@ -24,8 +24,8 @@ CuckooSet<Pheet, TT, Comparator>::~CuckooSet()
     delete[] the_table[0];
     delete[] the_table[1];
     delete the_lock;
-    for (auto it = old_locks.begin(); it != old_locks.end(); it++) {
-        delete *it;
+    for (auto it : old_locks) {
+        delete it;
     }
 }
 
