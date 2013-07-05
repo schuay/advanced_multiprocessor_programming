@@ -24,7 +24,7 @@ func (i *itemLock) Lock(item int64) {
             /* Spin. */
         }
 
-        oldMutex := &i.s.mutex
+        oldMutex := i.s.mutex
 
         oldMutex0 := &oldMutex[0][h0(item) % uint(len(oldMutex[0]))]
         oldMutex1 := &oldMutex[1][h1(item) % uint(len(oldMutex[1]))]
@@ -32,7 +32,7 @@ func (i *itemLock) Lock(item int64) {
         oldMutex0.Lock()
         oldMutex1.Lock()
 
-        if atomic.LoadInt32(&i.s.resizing) == 0 && oldMutex == &i.s.mutex {
+        if atomic.LoadInt32(&i.s.resizing) == 0 && oldMutex == i.s.mutex {
             return
         } else {
             oldMutex0.Unlock()
@@ -102,7 +102,7 @@ const LOCK_CAPACITY int = 1024 /* Must divide all possible capacities evenly. */
 type set struct {
     size, capacity int64
     table [2][]probe.Set
-    mutex [2][]sync.Mutex
+    mutex *[2][]sync.Mutex
     resizing int32
 }
 
@@ -110,6 +110,7 @@ func NewSet() Set {
     s := new(set)
     s.capacity = INITIAL_CAPACITY;
     s.initSets(int(INITIAL_CAPACITY))
+    s.mutex = new([2][]sync.Mutex)
     s.mutex[0] = make([]sync.Mutex, LOCK_CAPACITY)
     s.mutex[1] = make([]sync.Mutex, LOCK_CAPACITY)
     return s
