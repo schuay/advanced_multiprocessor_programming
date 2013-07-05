@@ -231,6 +231,8 @@ template <class Pheet, typename TT, class Comparator>
 bool
 CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
 {
+    GlobalLockGuard lock(this);
+
     assert(k == 0 || k == 1);
 
     size_t hi = h, hj;
