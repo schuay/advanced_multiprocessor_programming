@@ -19,13 +19,31 @@ type itemLock struct {
 }
 
 func (i *itemLock) Lock(item int64) {
-    i.s.mutex[0][h0(item) % uint(LOCK_CAPACITY)].Lock()
-    i.s.mutex[1][h1(item) % uint(LOCK_CAPACITY)].Lock()
+    for {
+        for atomic.LoadInt32(&i.s.resizing) == 1 {
+            /* Spin. */
+        }
+
+        oldMutex := &i.s.mutex
+
+        oldMutex0 := &oldMutex[0][h0(item) % uint(len(oldMutex[0]))]
+        oldMutex1 := &oldMutex[1][h1(item) % uint(len(oldMutex[1]))]
+
+        oldMutex0.Lock()
+        oldMutex1.Lock()
+
+        if atomic.LoadInt32(&i.s.resizing) == 0 && oldMutex == &i.s.mutex {
+            return
+        } else {
+            oldMutex0.Unlock()
+            oldMutex1.Unlock()
+        }
+    }
 }
 
 func (i *itemLock) Unlock(item int64) {
-    i.s.mutex[0][h0(item) % uint(LOCK_CAPACITY)].Unlock()
-    i.s.mutex[1][h1(item) % uint(LOCK_CAPACITY)].Unlock()
+    i.s.mutex[0][h0(item) % uint(len(i.s.mutex[0]))].Unlock()
+    i.s.mutex[1][h1(item) % uint(len(i.s.mutex[1]))].Unlock()
 }
 
 func (i *itemLock) LockAll() {
@@ -85,6 +103,7 @@ type set struct {
     size, capacity int64
     table [2][]probe.Set
     mutex [2][]sync.Mutex
+    resizing int32
 }
 
 func NewSet() Set {
