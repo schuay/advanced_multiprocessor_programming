@@ -34,7 +34,7 @@ public:
 
    bool attemptMark(const std::thread::id newReference, const bool newMark)
    {
-        compareAndSet(0, *((uint64_t *) &newReference), false, newMark);
+        return compareAndSet(0, *((uint64_t *) &newReference), false, newMark);
    }
 
    void reset()
