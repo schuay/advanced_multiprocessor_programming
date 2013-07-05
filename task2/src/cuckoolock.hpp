@@ -4,6 +4,9 @@
 #include <mutex>
 #include <assert.h>
 
+/*
+ * Provides the 2 dimensional array of metexes required for cuckooset
+ */
 class CuckooLock {
 public:
     CuckooLock(size_t capacity)
@@ -34,10 +37,6 @@ public:
 
     void quiesce()
     {
-        /*TODO:
-          The book uses lock.isLocked() for this, but since std::mutex doesn't provide such a method,
-          this is the only way to do it. Might be bad for performance if the locks are not locked'
-         */
         for(int i = 0; i < the_capacity; i++) {
             the_lock[0][i].lock();
             the_lock[0][i].unlock();
@@ -47,8 +46,6 @@ public:
 private:
     std::recursive_mutex *the_lock[2];
     size_t the_capacity;
-
-
 };
 
 
