@@ -1,12 +1,15 @@
 #ifndef __CUCKOOLOCK_H
 #define __CUCKOOLOCK_H
 
-#include <mutex>
 #include <assert.h>
+#include <mutex>
+
+#include "hash.hpp"
 
 /*
  * Provides the 2 dimensional array of mutexes required for CuckooSet.
  */
+template <typename TT>
 class CuckooLock {
 public:
     CuckooLock(const size_t capacity)
@@ -22,22 +25,39 @@ public:
         delete[] the_lock[1];
     }
 
-    void lock(size_t r, size_t c)
+    void lock(const TT &item)
     {
-        assert(r < 2 && c < the_capacity);
-        the_lock[r][c].lock();
+        const size_t hash0 = h0(item) % the_capacity;
+        const size_t hash1 = h1(item) % the_capacity;
+        the_lock[0][hash0].lock();
+        the_lock[1][hash1].lock();
     }
 
-    void unlock(size_t r, size_t c)
+    void unlock(const TT &item)
     {
-        assert(r < 2 && c < the_capacity);
-        the_lock[r][c].unlock();
+        const size_t hash0 = h0(item) % the_capacity;
+        const size_t hash1 = h1(item) % the_capacity;
+        the_lock[0][hash0].unlock();
+        the_lock[1][hash1].unlock();
+    }
 
+    void lockAll()
+    {
+        for (size_t i = 0; i < the_capacity; i++) {
+            the_lock[0][i].lock();
+        }
+    }
+
+    void unlockAll()
+    {
+        for (size_t i = 0; i < the_capacity; i++) {
+            the_lock[0][i].unlock();
+        }
     }
 
     void quiesce()
     {
-        for(size_t i = 0; i < the_capacity; i++) {
+        for (size_t i = 0; i < the_capacity; i++) {
             the_lock[0][i].lock();
             the_lock[0][i].unlock();
         }
@@ -48,5 +68,4 @@ private:
     const size_t the_capacity;
 };
 
-
-#endif //
+#endif /* __CUCKOOLOCK_H */

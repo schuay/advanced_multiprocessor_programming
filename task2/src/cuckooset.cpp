@@ -15,7 +15,7 @@ CuckooSet<Pheet, TT, Comparator>::CuckooSet()
     the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
     the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
 
-    the_lock = new CuckooLock(the_capacity);
+    the_lock = new CuckooLock<TT>(the_capacity);
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -154,18 +154,14 @@ CuckooSet<Pheet, TT, Comparator>::acquire(const TT &item)
             who = the_owner.get(&mark);
         } while(mark && who != me);
 
-        CuckooLock *prev_lock = the_lock;
-        const size_t hash0 = h0(item) % the_capacity;
-        const size_t hash1 = h1(item) % the_capacity;
-        the_lock->lock(0, hash0);
-        the_lock->lock(1, hash1);
+        CuckooLock<TT> *prev_lock = the_lock;
+        the_lock->lock(item);
 
         who = the_owner.get(&mark);
         if((!mark || who == me) && the_lock == prev_lock) {
             return;
         } else {
-            the_lock->unlock(0, hash0);
-            the_lock->unlock(1, hash1);
+            the_lock->unlock(item);
         }
     }
 }
@@ -174,10 +170,7 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::release(const TT &item)
 {
-    const size_t hash0 = h0(item) % the_capacity;
-    const size_t hash1 = h1(item) % the_capacity;
-    the_lock->unlock(0, hash0);
-    the_lock->unlock(1, hash1);
+    the_lock->unlock(item);
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -207,8 +200,8 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 
         the_size = 0;
 
-        CuckooLock *prev_lock = the_lock;
-        the_lock = new CuckooLock(the_capacity);
+        CuckooLock<TT> *prev_lock = the_lock;
+        the_lock = new CuckooLock<TT>(the_capacity);
         delete prev_lock;
 
 
@@ -319,9 +312,7 @@ CuckooSet<Pheet, TT, Comparator>::
 GlobalLockGuard::GlobalLockGuard(CuckooSet<Pheet, TT, Comparator> *set)
     : set(set), is_released(false)
 {
-    for (int i = 0; i < set->the_capacity; i++) {
-        set->the_lock->lock(0, i);
-    }
+    set->the_lock->lockAll();
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -345,9 +336,7 @@ CuckooSet<Pheet, TT, Comparator>::
 GlobalLockGuard::releaseAll()
 {
     if (!is_released) {
-        for (int i = 0; i < set->the_capacity; i++) {
-             set->the_lock->unlock(0, i);
-        }
+         set->the_lock->unlockAll();
     }
     is_released = true;
 }

@@ -46,7 +46,7 @@ private:
     ProbeSet<TT, Comparator> *the_table[2];
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;
-    CuckooLock *the_lock;
+    CuckooLock<TT> *the_lock;
     AtomicMarkableReference the_owner;
 
 private:
