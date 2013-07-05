@@ -196,8 +196,6 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 {
-    //GlobalLockGuard locks(this);
-
     if (capacity != the_capacity) {
         return;
     }
@@ -254,8 +252,6 @@ bool
 CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
 {
     assert(k == 0 || k == 1);
-
-    //GlobalLockGuard lock(this);
 
     size_t hi = h, hj;
     int i = k;
