@@ -5,9 +5,9 @@
 #include <mutex>
 #include <pheet/pheet.h>
 
-#include "probeset.hpp"
 #include "atomicmarkablereference.hpp"
 #include "cuckoolock.hpp"
+#include "probeset.hpp"
 
 /**
  * A set implemented using cuckoo hashing.
