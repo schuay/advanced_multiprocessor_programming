@@ -1,5 +1,7 @@
 #include "atomicmarkablereference.hpp"
 
+#define TID(id) *((uint64_t *)&id)
+
 AtomicMarkableReference::
 AtomicMarkableReference()
 {
@@ -16,7 +18,7 @@ AtomicMarkableReference(std::thread::id reference,
     static_assert(sizeof(uint64_t) == sizeof(std::thread::id),
             "This class heavily relies on std::thread::id being "
             "of equal size as uint64_t");
-    the_value = (uint64_t)mark | *((uint64_t *)&reference) << 1;
+    the_value = (uint64_t)mark | TID(reference) << 1;
 }
 
 bool
@@ -26,8 +28,8 @@ compareAndSet(const std::thread::id expectedReference,
               const bool expectedMark,
               const bool newMark)
 {
-    return compareAndSet(*((uint64_t *)&expectedReference),
-                         *((uint64_t *)&newReference),
+    return compareAndSet(TID(expectedReference),
+                         TID(newReference),
                          expectedMark,
                          newMark);
 }
@@ -37,7 +39,7 @@ AtomicMarkableReference::
 attemptMark(const std::thread::id newReference,
             const bool newMark)
 {
-    return compareAndSet(0, *((uint64_t *)&newReference), false, newMark);
+    return compareAndSet(0, TID(newReference), false, newMark);
 }
 
 void
@@ -63,10 +65,11 @@ compareAndSet(const uint64_t expectedReference,
               const bool expectedMark,
               const bool newMark)
 {
-    uint64_t expected, update;
+    /* TODO: casting std::thread::id to uint64_t might be dangerous!!
+     * std::thread::id does not give any guarantees except for it to
+     * be unique for each thread. */
+    uint64_t expected = (uint64_t)expectedMark | expectedReference << 1;
+    const uint64_t update = (uint64_t)newMark | newReference << 1;
 
-    //TODO: casting std::thread::id to uint64_t might be dangerous!! std::thread::id does not give any guarantees except for it to be unique for each thread.
-    expected = (uint64_t)expectedMark | expectedReference << 1;
-    update = (uint64_t)newMark | newReference << 1;
     return the_value.compare_exchange_strong(expected, update);
 }
