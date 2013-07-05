@@ -5,18 +5,18 @@
 #include <assert.h>
 
 /*
- * Provides the 2 dimensional array of metexes required for cuckooset
+ * Provides the 2 dimensional array of mutexes required for CuckooSet.
  */
 class CuckooLock {
 public:
-    CuckooLock(size_t capacity)
+    CuckooLock(const size_t capacity)
+        : the_capacity(capacity)
     {
-        the_capacity = capacity;
         the_lock[0] = new std::recursive_mutex[the_capacity];
         the_lock[1] = new std::recursive_mutex[the_capacity];
     }
 
-    ~CuckooLock()
+    virtual ~CuckooLock()
     {
         delete[] the_lock[0];
         delete[] the_lock[1];
@@ -45,7 +45,7 @@ public:
 
 private:
     std::recursive_mutex *the_lock[2];
-    size_t the_capacity;
+    const size_t the_capacity;
 };
 
 
