@@ -193,8 +193,10 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 
     if(the_owner.attemptMark(me, true)) {
 
-        if(the_capacity != prev_capacity)
+        if(the_capacity != prev_capacity) {
+            the_owner.reset();
             return;
+        }
         the_lock->quiesce();
         the_capacity = prev_capacity * 2;
         ProbeSet<TT, Comparator> *prev0 = the_table[0];
