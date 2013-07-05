@@ -4,6 +4,7 @@ include_directories(
 
 add_library(cuckooset SHARED
     atomicmarkablereference.cpp
+    cuckoolock.cpp
     cuckooset.cpp
     hash.cpp
     probeset.cpp
