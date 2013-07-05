@@ -15,7 +15,7 @@ CuckooSet<Pheet, TT, Comparator>::CuckooSet()
     the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
     the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
 
-    the_lock = std::make_shared<CuckooLock<TT> >(the_capacity);
+    the_lock = new CuckooLock<TT>(the_capacity);
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -23,6 +23,7 @@ CuckooSet<Pheet, TT, Comparator>::~CuckooSet()
 {
     delete[] the_table[0];
     delete[] the_table[1];
+    delete the_lock;
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -154,9 +155,7 @@ CuckooSet<Pheet, TT, Comparator>::acquire(const TT &item)
             who = the_owner.get(&mark);
         } while (mark && who != me);
 
-        /* We'd need atomic_load(shared_ptr) here, but libstdc++ does not implement
-         * it yet (even though it's in the C++11 standard :( ). */
-        const std::shared_ptr<CuckooLock<TT> > prev_lock = the_lock;
+        CuckooLock<TT> *prev_lock = the_lock;
         prev_lock->lock(item);
 
         who = the_owner.get(&mark);
@@ -203,7 +202,10 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
         the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
         the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
 
-        the_lock = std::make_shared<CuckooLock<TT> >(the_capacity);
+        CuckooLock<TT> *prev_lock = the_lock;
+        the_lock = new CuckooLock<TT>(the_capacity);
+        delete prev_lock;
+
 
         for (size_t i = 0; i < prev_capacity; i++) {
             ProbeSet<TT, Comparator> *p = prev0 + i;

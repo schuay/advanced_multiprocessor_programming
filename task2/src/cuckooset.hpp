@@ -2,7 +2,6 @@
 #define __CUCKOOSET_H
 
 #include <atomic>
-#include <memory>
 #include <mutex>
 #include <pheet/pheet.h>
 
@@ -47,7 +46,7 @@ private:
     ProbeSet<TT, Comparator> *the_table[2];
     std::atomic<size_t> the_size;
     std::atomic<size_t> the_capacity;
-    std::shared_ptr<CuckooLock<TT> > the_lock;
+    CuckooLock<TT> *the_lock;
     AtomicMarkableReference the_owner;
 
 private:
