@@ -57,4 +57,4 @@ template class StdSet<
         pheet::DataStructures,
         pheet::ConcurrentDataStructures>,
     unsigned long,
-    std::less<unsigned long> >;
+    std::less<unsigned long>>;

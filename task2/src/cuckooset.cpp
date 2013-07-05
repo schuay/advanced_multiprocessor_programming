@@ -345,4 +345,4 @@ template class CuckooSet<
         pheet::DataStructures,
         pheet::ConcurrentDataStructures>,
     unsigned long,
-    std::less<unsigned long> >;
+    std::less<unsigned long>>;

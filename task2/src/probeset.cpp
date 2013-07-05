@@ -37,4 +37,4 @@ ProbeSet<T, Comparator>::size() const
 
 template class ProbeSet<
     unsigned long,
-    std::less<unsigned long> >;
+    std::less<unsigned long>>;

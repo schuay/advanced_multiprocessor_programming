@@ -11,7 +11,7 @@
 
 template <class Pheet,
           typename TT,
-          class Comparator = std::less<TT> >
+          class Comparator = std::less<TT>>
 class StdSet {
 public:
     StdSet() { }

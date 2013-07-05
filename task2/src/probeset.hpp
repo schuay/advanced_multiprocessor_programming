@@ -8,7 +8,7 @@
 #define PROBE_SIZE (16)
 
 template <typename T,
-          class Comparator = std::less<T> >
+          class Comparator = std::less<T>>
 class ProbeSet {
 public:
     void add(const T &item);
