@@ -174,10 +174,10 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::release(const TT &item)
 {
-   const size_t hash0 = h0(item) % the_capacity;
-   const size_t hash1 = h1(item) % the_capacity;
-   the_lock->unlock(0, hash0);
-   the_lock->unlock(1, hash1);
+    const size_t hash0 = h0(item) % the_capacity;
+    const size_t hash1 = h1(item) % the_capacity;
+    the_lock->unlock(0, hash0);
+    the_lock->unlock(1, hash1);
 }
 
 template <class Pheet, typename TT, class Comparator>
