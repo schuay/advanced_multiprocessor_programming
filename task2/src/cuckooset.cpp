@@ -180,14 +180,16 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::release(const TT &item)
 {
+   /*TODO:
+    * After resize is called, unlocking fails. This is because l0/l1 are not correct.
+    * However, the pointers obtained in aquare() just before are correct.
+   */
    const size_t hash0 = h0(item) % the_capacity;
    const size_t hash1 = h1(item) % the_capacity;
    std::recursive_mutex *l0 = (*the_lock)[0] + hash0;
    std::recursive_mutex *l1 = (*the_lock)[1] + hash1;
    l0->lock();
    l1->lock();
-//    the_lock[0][h0(item) % the_capacity]->unlock();
-//    the_lock[1][h1(item) % the_capacity]->unlock();
 }
 
 template <class Pheet, typename TT, class Comparator>
