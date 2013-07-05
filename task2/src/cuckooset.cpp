@@ -320,7 +320,9 @@ template <class Pheet, typename TT, class Comparator>
 CuckooSet<Pheet, TT, Comparator>::
 GlobalLockGuard::~GlobalLockGuard()
 {
-    releaseAll();
+    if (!is_released) {
+         set->the_lock->unlockAll();
+    }
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -328,17 +330,7 @@ void
 CuckooSet<Pheet, TT, Comparator>::
 GlobalLockGuard::release()
 {
-    releaseAll();
-}
-
-template <class Pheet, typename TT, class Comparator>
-void
-CuckooSet<Pheet, TT, Comparator>::
-GlobalLockGuard::releaseAll()
-{
-    if (!is_released) {
-         set->the_lock->unlockAll();
-    }
+    set->the_lock->unlockAll();
     is_released = true;
 }
 

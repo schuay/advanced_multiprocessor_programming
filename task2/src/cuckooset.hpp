@@ -70,9 +70,6 @@ private:
         void release();
 
     private:
-        void releaseAll();
-
-    private:
         CuckooSet<Pheet, TT, Comparator> *set;
         bool is_released;
     };
