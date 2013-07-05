@@ -205,7 +205,7 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 
         the_lock = std::make_shared<CuckooLock<TT> >(the_capacity);
 
-        for (int i = 0; i < prev_capacity; i++) {
+        for (size_t i = 0; i < prev_capacity; i++) {
             ProbeSet<TT, Comparator> *p = prev0 + i;
             while (p->size() > 0) {
                 TT elem = p->first();
