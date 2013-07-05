@@ -20,7 +20,7 @@ bake:
 check: bake
 	cd build; ctest --output-on-failure
 
-bench:
+bench: bake
 	cd $(PHEETDIR) && make test && LD_LIBRARY_PATH=$(AMPDIR) bin/pheet_test
 
 hand-in:
