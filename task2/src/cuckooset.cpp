@@ -6,7 +6,6 @@
 
 #define INITIAL_CAPACITY (1024)
 #define RELOCATE_LIMIT (512)
-#define LOCK_CAPACITY (8) /* Must divide all possible capacities evenly. */
 
 template <class Pheet, typename TT, class Comparator>
 CuckooSet<Pheet, TT, Comparator>::CuckooSet()
