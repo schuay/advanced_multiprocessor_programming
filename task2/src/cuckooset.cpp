@@ -23,6 +23,7 @@ CuckooSet<Pheet, TT, Comparator>::~CuckooSet()
 {
     delete[] the_table[0];
     delete[] the_table[1];
+    delete the_lock;
 }
 
 template <class Pheet, typename TT, class Comparator>
