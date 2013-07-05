@@ -184,6 +184,10 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 {
+    if (capacity != the_capacity) {
+        return;
+    }
+
     const size_t prev_capacity = the_capacity;
     std::thread::id me = std::this_thread::get_id();
 
