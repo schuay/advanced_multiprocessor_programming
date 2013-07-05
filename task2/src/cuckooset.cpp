@@ -146,16 +146,17 @@ void
 CuckooSet<Pheet, TT, Comparator>::acquire(const TT &item)
 {
     bool mark;
-    std::thread::id me = std::this_thread::get_id();
     std::thread::id who;
-    while(true) {
+    const std::thread::id me = std::this_thread::get_id();
+
+    while (true) {
         do {
             who = the_owner.get(&mark);
-        } while(mark && who != me);
+        } while (mark && who != me);
 
         /* We'd need atomic_load(shared_ptr) here, but libstdc++ does not implement
-         * it yet (even though it's in the C++11 standard :(. */
-        std::shared_ptr<CuckooLock<TT> > prev_lock = the_lock;
+         * it yet (even though it's in the C++11 standard :( ). */
+        const std::shared_ptr<CuckooLock<TT> > prev_lock = the_lock;
         prev_lock->lock(item);
 
         who = the_owner.get(&mark);
@@ -183,25 +184,25 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
     }
 
     const size_t prev_capacity = the_capacity;
-    std::thread::id me = std::this_thread::get_id();
+    const std::thread::id me = std::this_thread::get_id();
 
-    if(the_owner.attemptMark(me, true)) {
-
-        if(the_capacity != prev_capacity) {
+    if (the_owner.attemptMark(me, true)) {
+        if (the_capacity != prev_capacity) {
             the_owner.reset();
             return;
         }
+
         the_lock->quiesce();
-        the_capacity = prev_capacity * 2;
+
         ProbeSet<TT, Comparator> *prev0 = the_table[0];
         ProbeSet<TT, Comparator> *prev1 = the_table[1];
+
+        the_capacity = prev_capacity * 2;
+        the_size = 0;
 
         the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
         the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
 
-        the_size = 0;
-
-        std::shared_ptr<CuckooLock<TT> > prev_lock = the_lock;
         the_lock = std::make_shared<CuckooLock<TT> >(the_capacity);
 
         for (int i = 0; i < prev_capacity; i++) {
@@ -221,6 +222,7 @@ CuckooSet<Pheet, TT, Comparator>::resize(const size_t capacity)
 
         delete[] prev0;
         delete[] prev1;
+
         the_owner.reset();
     }
 }
@@ -229,9 +231,9 @@ template <class Pheet, typename TT, class Comparator>
 bool
 CuckooSet<Pheet, TT, Comparator>::relocate(const int k, const size_t h)
 {
-    GlobalLockGuard lock(this);
-
     assert(k == 0 || k == 1);
+
+    GlobalLockGuard lock(this);
 
     size_t hi = h, hj;
     int i = k;
