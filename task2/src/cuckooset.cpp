@@ -16,7 +16,6 @@ CuckooSet<Pheet, TT, Comparator>::CuckooSet()
     the_table[0] = new ProbeSet<TT, Comparator>[the_capacity];
     the_table[1] = new ProbeSet<TT, Comparator>[the_capacity];
 
-    std::recursive_mutex *tmp[2];
 	tmp[0] = new std::recursive_mutex[the_capacity];
     tmp[1] = new std::recursive_mutex[the_capacity];
     the_lock = &tmp;
@@ -181,8 +180,14 @@ template <class Pheet, typename TT, class Comparator>
 void
 CuckooSet<Pheet, TT, Comparator>::release(const TT &item)
 {
-    the_lock[0][h0(item) % the_capacity]->unlock();
-    the_lock[1][h1(item) % the_capacity]->unlock();
+   const size_t hash0 = h0(item) % the_capacity;
+   const size_t hash1 = h1(item) % the_capacity;
+   std::recursive_mutex *l0 = (*the_lock)[0] + hash0;
+   std::recursive_mutex *l1 = (*the_lock)[1] + hash1;
+   l0->lock();
+   l1->lock();
+//    the_lock[0][h0(item) % the_capacity]->unlock();
+//    the_lock[1][h1(item) % the_capacity]->unlock();
 }
 
 template <class Pheet, typename TT, class Comparator>
@@ -304,8 +309,8 @@ CuckooSet<Pheet, TT, Comparator>::quiesce()
     The book uses lock.isLocked() for this, but since std::mutex doesn't provide such a method,
     this is the only way to do it. Might be bad for performance if the locks are not locked'*/
     for(int i = 0; i < the_capacity; i++) {
-        the_lock[0][i]->lock();
-        the_lock[0][i]->unlock();
+        ((*the_lock)[0] + i)->lock();
+        ((*the_lock)[0] + i)->unlock();
     }
 }
 
@@ -342,7 +347,7 @@ GlobalLockGuard::GlobalLockGuard(CuckooSet<Pheet, TT, Comparator> *set)
     : set(set), is_released(false)
 {
     for (int i = 0; i < set->the_capacity; i++) {
-        set->the_lock[0][i]->lock();
+        ((*(set->the_lock))[0] + i)->lock();
     }
 }
 
@@ -368,7 +373,7 @@ GlobalLockGuard::releaseAll()
 {
     if (!is_released) {
         for (int i = 0; i < set->the_capacity; i++) {
-            set->the_lock[0][i]->unlock();
+             ((*(set->the_lock))[0] + i)->unlock();
         }
     }
     is_released = true;
