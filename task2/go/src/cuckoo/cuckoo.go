@@ -5,11 +5,12 @@ import (
     "probe"
     "sync"
     "sync/atomic"
+    "time"
 )
 
 type itemLocker interface {
     Lock(item int64)
-    LockAll()
+    LockAll() bool
     Unlock(item int64)
     UnlockAll()
 }
@@ -22,6 +23,7 @@ func (i *itemLock) Lock(item int64) {
     for {
         for atomic.LoadInt32(&i.s.resizing) == 1 {
             /* Spin. */
+            time.Sleep(50 * time.Nanosecond)
         }
 
         oldMutex := i.s.mutex
@@ -46,16 +48,21 @@ func (i *itemLock) Unlock(item int64) {
     i.s.mutex[1][h1(item) % uint(len(i.s.mutex[1]))].Unlock()
 }
 
-func (i *itemLock) LockAll() {
-    for j := 0; j < LOCK_CAPACITY; j++ {
-        i.s.mutex[0][j].Lock()
+func (i *itemLock) LockAll() bool {
+    if !atomic.CompareAndSwapInt32(&i.s.resizing, 0, 1) {
+        return false
     }
+
+    for j := 0; j < len(i.s.mutex[0]); j++ {
+        i.s.mutex[0][j].Lock()
+        i.s.mutex[0][j].Unlock()
+    }
+
+    return true
 }
 
 func (i *itemLock) UnlockAll() {
-    for j := 0; j < LOCK_CAPACITY; j++ {
-        i.s.mutex[0][j].Unlock()
-    }
+    atomic.StoreInt32(&i.s.resizing, 0)
 }
 
 func newItemLock(s *set) *itemLock {
@@ -74,8 +81,8 @@ func (i noopLock) Unlock(item int64) {
     /* Nothing */
 }
 
-func (i noopLock) LockAll() {
-    /* Nothing */
+func (i noopLock) LockAll() bool {
+    return true
 }
 
 func (i noopLock) UnlockAll() {
@@ -97,7 +104,6 @@ type Set interface {
 }
 
 const INITIAL_CAPACITY int64 = 1024
-const LOCK_CAPACITY int = 1024 /* Must divide all possible capacities evenly. */
 
 type set struct {
     size, capacity int64
@@ -110,9 +116,6 @@ func NewSet() Set {
     s := new(set)
     s.capacity = INITIAL_CAPACITY;
     s.initSets(int(INITIAL_CAPACITY))
-    s.mutex = new([2][]sync.Mutex)
-    s.mutex[0] = make([]sync.Mutex, LOCK_CAPACITY)
-    s.mutex[1] = make([]sync.Mutex, LOCK_CAPACITY)
     return s
 }
 
@@ -212,12 +215,14 @@ func (s *set) Size() int {
 }
 
 func (s *set) resize(capacity int64, lock itemLocker) {
-    lock.LockAll()
-    defer lock.UnlockAll()
-
     if capacity != s.capacity {
         return
     }
+
+    if !lock.LockAll() {
+        return
+    }
+    defer lock.UnlockAll()
 
     prevCapacity := s.capacity
     s.capacity *= 2
@@ -249,6 +254,11 @@ func (s *set) initSets(capacity int) {
         s.table[0][i] = probe.NewSet()
         s.table[1][i] = probe.NewSet()
     }
+
+    s.mutex = new([2][]sync.Mutex)
+    s.mutex[0] = make([]sync.Mutex, capacity)
+    s.mutex[1] = make([]sync.Mutex, capacity)
+
     s.size = 0
 }
 
