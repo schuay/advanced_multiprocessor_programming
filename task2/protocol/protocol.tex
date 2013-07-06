@@ -44,6 +44,23 @@
 * Good benchmark analysis.
 * Short document: 2-4 pages excluding plots and sourcecode. Description of data
   structure. Theoretical analysis. Benchmark (results, process).
+
+A couple of notes:
+
+Remove doesn't compact the set. In fact, I think it's impossible to *know* when
+a compaction is possible since it depends on the hash functions.
+
+The refined set does not delete old mutex collections until the set is deleted.
+This results in a little memory overhead but is necessary because we can't
+simply delete old lock sets (other threads might still be accessing them). We
+tried reference counting, but it ended up as the bottleneck for >~4 threads.
+
+For the same reason (= no garbage collection), we also had to introduce a
+global lock in relocate() to protect ProbeSets from being deleted while still
+in use.
+
+The Go implementation doesn't need either of these crutches. It's also designed
+to work without reentrant locks and thread ids.
 \end{comment}
 
 \end{document}
