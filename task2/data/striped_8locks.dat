@@ -1,0 +1,88 @@
+make: Nothing to be done for `test'.
+----
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	1	17.0417	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	2	9.70199	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	3	6.75036	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	6	3.68399	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	12	2.24007	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	24	2.80464	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	48	2.4986	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	1	17.4575	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	2	11.3053	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	3	8.30065	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	6	5.38253	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	12	4.90284	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	24	7.14345	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	48	7.40057	
+----
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	1	16.9915	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	2	9.69705	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	3	6.75517	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	6	3.66315	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	12	2.24368	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	24	2.79753	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	48	2.51342	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	1	17.493	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	2	11.2934	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	3	8.34913	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	6	5.34354	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	12	4.74504	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	24	6.90125	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	48	7.35937	
+----
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	1	17.013	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	2	9.73393	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	3	6.77924	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	6	3.67702	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	12	2.24396	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	24	1.93332	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.99	0.005	0	48	2.43913	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	1	17.4882	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	2	11.2676	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	3	8.32964	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	6	5.37471	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	12	4.89598	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	24	6.71135	
+test	set	scheduler	range	blocks	contains_p	add_p	seed	cpus	total_time	
+set_bench	CuckooSet	BStrategyScheduler<DistKStrategyTaskStorage<128, Local>>	10000	1000	0.5	0.25	0	48	7.11259	

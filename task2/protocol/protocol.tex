@@ -6,6 +6,21 @@
 \usepackage{comment}
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+%page boarders
+\usepackage[top=3cm, bottom=3cm, left=2cm, right=2cm]{geometry}
+
+
+
+
+\usepackage{caption}
+\usepackage{color}
+\usepackage[lofdepth,lotdepth]{subfig}
+
+
 
 \definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
 \definecolor{Gray}{gray}{0.5}
@@ -25,42 +40,150 @@
 
 \title{VU Advanced Multiprocessor Programming \\
        SS 2013 \\
-       Task 2}
+       Task 2: Concurrent Cuckoo Hash Set}
 \author{Jakob Gruber, 0203440 \\
-        Martin Kalany, 0123456}
+        Martin Kalany, 0825673}
 
 \begin{document}
 
 \maketitle
 
-\tableofcontents
+%y\tableofcontents
+%\pagebreak
 
-\pagebreak
-
-\section{Specifications}
+%\section{Specification}
 
 \begin{comment}
 * Good theoretical analysis (invariants, linearizability, progress guarantees).
 * Good benchmark analysis.
 * Short document: 2-4 pages excluding plots and sourcecode. Description of data
   structure. Theoretical analysis. Benchmark (results, process).
-
-A couple of notes:
-
-Remove doesn't compact the set. In fact, I think it's impossible to *know* when
-a compaction is possible since it depends on the hash functions.
-
-The refined set does not delete old mutex collections until the set is deleted.
-This results in a little memory overhead but is necessary because we can't
-simply delete old lock sets (other threads might still be accessing them). We
-tried reference counting, but it ended up as the bottleneck for >~4 threads.
-
-For the same reason (= no garbage collection), we also had to introduce a
-global lock in relocate() to protect ProbeSets from being deleted while still
-in use.
-
-The Go implementation doesn't need either of these crutches. It's also designed
-to work without reentrant locks and thread ids.
++
++A couple of notes:
++
++Remove doesn't compact the set. In fact, I think it's impossible to *know* when
++a compaction is possible since it depends on the hash functions.
++
++The refined set does not delete old mutex collections until the set is deleted.
++This results in a little memory overhead but is necessary because we can't
++simply delete old lock sets (other threads might still be accessing them). We
++tried reference counting, but it ended up as the bottleneck for >~4 threads.
++
++For the same reason (= no garbage collection), we also had to introduce a
++global lock in relocate() to protect ProbeSets from being deleted while still
++in use.
++
++The Go implementation doesn't need either of these crutches. It's also designed
++to work without reentrant locks and thread ids.
+ \end{comment}
 \end{comment}
+
+\section{Introduction}
+Our task was the implement the \textbf{Concurrent Cuckoo Hash Set} as presented in \cite{almasi}, pages 316-325. 
+\newline 
+As in the book, two versions are presented: The \textbf{Striped Cuckoo Hash Set} uses a fixed 2-by-L array of reentrant locks, where lock[i][j] guards the element at table[i][k] with $k\mod L = j$. This variant has the obvious disadvantage that the array of locks does not grow with the number of elements $n$ stored in the set. Thus, we expect the performance to decrease significantly for large $n$ and a small number of locks.
+\newline
+The \textbf{Refined Cuckoo Hash Set} attempts to repair this issue by letting the number of locks grow with the the size of the set. This requires some additional synchronization, the performance impact of which will be studied in Section \ref{sec:performance}.
+
+\section{Cuckoo Hash Set}
+The foundation of of the presented data structure is \textbf{Cuckoo Hashing}, an \textit{open-addressed} sequential hash set. This means that at each location determined by a hash function, only one element can reside at any given time. In contrast, a \textbf{closed-addressed} hash set provides a bucket at each location that is able to hold multiple items.
+\newline
+The basic idea is to provide two tables where different hash functions are used to map an element to a table location. If $hash0(x)$ maps a given element $x$ to a location that is not occupied, $x$ is simply put there. If this location happens to be already occupied, the currently stored element $y$ is kicked out to make room for $x$. $y$ is relocated to $hash1(y)$ using the same principle. This may of course create long chains of relocations with circular dependencies. Thus, only a fixed number of relocate operations are executed before the capacity of the set and thus the two tables is increased, prompting all elements to be re-added to the set.
+Figure \ref{alg:cuckooHashing} shows this algorithm.
+
+\begin{algorithm}
+\caption{Cuckoo Hashing}
+\label{alg:cuckooHashing}
+\begin{algorithmic}[5]
+\Function {put}{T x}
+	\If{contains(x)}
+		\State \Return false
+	\EndIf
+	\For{i = 0; i $<$ LIMIT; i++}
+		\If {(x = swap(0, hash0(x), x) == NULL}
+			\State \Return true
+		\ElsIf {(x = swap(0, hash1(x), x) == NULL}
+			\State \Return true
+		\EndIf
+	\EndFor
+	\State resize()
+	\State put(x)
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\section{Progress guarantees}
+\label{sec:progressGuarantees}
+We show that each public method of class \textbf{CuckooSet} is starvation- and thus deadlock-free. Note that it is assumed that std::set is starvation-free if at no time the same element is accessed by more than one thread. We ensure this by holding a lock for the item whenever it is accessed to ensure mutual exclusion.
+\begin{itemize}
+\item For methods \textbf{size()} and \textbf{is\_empty()} this is trivially true, since they only require and atomic load operation and no synchronisation 
+whatsoever.
+\end{itemize}
+For the rest of the public methods, we need to have a closer look at methods of other classes first:
+\begin{itemize}
+\item In class \textbf{CuckooLock}, all methods are starvation- and deadlock-free. All we do is locking and unlocking mutexes and since we do this in the same order at all points, starvation may not occur (assuming that the callers ensure a correct sequence of calls to methods lock() and unlock() and that no thread stalls between calling lock() and unlock()).
+\item All methods in class \textbf{AtomicMarkableReference} are trivially starvation-free since we only do some basic arithmetic and CAS-operations.
+\end{itemize}
+
+In class \textbf{CuckooSet}
+\begin{itemize}
+\item In \textbf{acquire()}, the caller loops until no \textit{other} thread has marked the set for resizing. Additionally, the caller will continue looping if another thread marked the set for resizing or the array of locks was recreated while the caller attempted to acquire the lock. However, assuming that the resize-operation will eventually finish (which we will show later), the caller will be able to obtain the correct lock and thus finish the call.
+\item \textbf{release()} is starvation free, since we only unlock a mutex.
+\end{itemize}
+Note that class \textbf{GlobalLockGuard} is only a RAII-wrapper (todo: is this the correct word?), which acquires all locks in it's constructor by using CuckooLock. It further provides a method to release all locks and does so automatically upon destruction. Thus, it's methods are starvation-free.\textbf{LockGuard} is analogous, except for handling one lock for a specific item only. 
+
+\begin{itemize}
+\item \textbf{contains()} simply acquires the necessary lock and is starvation free if the constructor and destructor if class LockGuard are (which we already proved).
+\item \textbf{remove()} obtains the required lock and then calls contains(), which again acquires the same lock. Since we use recursive mutexes, this is starvation-free. 
+\item Trusting that contains() and remove() are starvation-free and assuming that put() is as well (which will be proved immediately), it can be shown that \textbf{relocate()} is too: The maximum number of iterations of the loop is limited by a constant and we only call starvation-free methods. Thus this method is starvation-free.
+\item \textbf{resize()} and is similar to the above, except that the loop is bounded by a variable finite value.
+\item \textbf{put()} is trivially starvation-free if resize() and relocate() are, since we have a simple sequence of statements. 
+\end{itemize}
+
+\section{Linearizability}
+\label{serc:linearizability}
+
+\section{Performance}
+\label{sec:performance}
+For benchmarks, the minimum execution time of 10 runs was taken for each value. Except when measuring performance of the Striped Cuckoo Set with only 8 locks, where the minimum of only 3 runs was taken (because execution time is rather high).
+\medskip
+\newline
+Figure \ref{fig:plot1} and \ref{fig:plot2} show the performance for the default set implementation provided by pheet using a global lock, our Striped Cuckoo Set implementation with a 2x1024 locks and our Refined Cuckoo Set, both with an initial capacity of 2x1024 elements and a limit of 512 relocate-operations. Figure \ref{fig:plot1} shows the performance when 99\% of all operations on the set are calls to contains() and 0.5\% are calls to add(). Figure \ref{fig:plot2} shows the same for a benchmark with 50\% of all operations on the set are calls to contains() and 25\% are calls to add().
+\newline
+Note that the x-axis is scaled with the binary logarithm.
+
+\begin{figure}
+\begin{center}
+\includegraphics{099contains_005add.eps}
+\end{center}
+\caption{Performance comparison of different set implementations: 99\% contains and 0.5\% add operations}
+\label{fig:plot1}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\includegraphics{05contains_025add.eps}
+\end{center}
+\caption{Performance comparison of different set implementations: 50\% contains and 25\% add operations}
+\label{fig:plot2}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\includegraphics{striped.eps}
+\end{center}
+\caption{Performance comparison Striped Cuckoo Set with different amount of locks}
+\label{fig:plot2}
+\end{figure}
+
+\section{Analysis}
+\label{sec:analysis}
+
+
+\begin{thebibliography}{9}
+\bibitem{almasi}
+   G. Almasi, Calin Cascaval, David A. Padua: 
+   \emph{Calculating Stack Distances Efficiently}
+\end{thebibliography}
 
 \end{document}
