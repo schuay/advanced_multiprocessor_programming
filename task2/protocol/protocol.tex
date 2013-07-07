@@ -65,7 +65,7 @@
 \end{comment}
 
 \section{Introduction}
-Our task was the implement the \textbf{Concurrent Cuckoo Hash Set} as presented in \cite{almasi}, pages 316-325. 
+Our task was to implement the \textbf{Concurrent Cuckoo Hash Set} as presented in \cite{herlihy}, pages 316-325. 
 \newline 
 As in the book, two versions are presented: The \textbf{Striped Cuckoo Hash Set} uses a fixed 2-by-L array of reentrant locks, where lock[i][j] guards the element at table[i][k] with $k\mod L = j$. This variant has the obvious disadvantage that the array of locks does not grow with the number of elements $n$ stored in the set. Thus, we expect the performance to decrease significantly for large $n$ and a small number of locks.
 \newline
@@ -78,7 +78,7 @@ The basic idea is to provide two tables where different hash functions are used 
 Figure \ref{alg:cuckooHashing} shows this algorithm.
 \medskip
 \newline
-To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set} adds the 2-by-L array of locks as well as buckets (called Probesets by us) for each table entry. When an element is added to a location and thus it's bucket, we check if the Probeset now contains more than $PROBE\_THREASHOLD$ values. If so, we relocate the oldest value of that Probeset. If it contains more than $PROBE_SIZE$ values, we need to resize the set.
+To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set} adds the 2-by-L array of locks as well as buckets (called Probesets by us) for each table entry. When an element is added to a location and thus it's bucket, we check if the Probeset now contains more than $PROBE\_THRESHOLD$ values. If so, we relocate the oldest value of that Probeset. If it contains more than $PROBE\_SIZE$ values, we need to resize the set.
 
 \begin{algorithm}
 \caption{Cuckoo Hashing}
@@ -104,17 +104,25 @@ To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set} adds
 \section{Important implementation details}
 \label{sec:implDetails}
 The pseudo code in the book contains some crucial mistakes, which we address here:
+
+\begin{comment}
+None of the following are actually mistakes in the book, since they provide the
+algorithm in Java (which obviously has GC). A potential mistake is that they
+simply access a bucket without a lock in relocate().
+\end{comment}
+
 \begin{itemize}
 \item The Refined Cuckoo Hash Set does not delete old mutex collections until the set is deleted. This results in a little memory overhead which is necessary to ensure that no thread tries to access one of the old mutexes. We tried reference counting, but it ended up as the bottleneck for $>4$ threads. The book does not address this issue and simply assumes that garbage collection is available.
 \item For the same reason we also had to introduce a global lock in relocate() to protect ProbeSets from being deleted while in being used by other threads.
 \item The remove() operation does not compact the set. In fact, we think it is very hard to specify good criteria when a compaction is possible, since this depends on the hash functions.
+
 \end{itemize}
 
 \section{Progress guarantees}
 \label{sec:progressGuarantees}
 We show that each public method of class \textbf{CuckooSet} is starvation- and thus deadlock-free. Note that it is assumed that std::set is starvation-free if at no time the same element is accessed by more than one thread. We ensure this by holding a lock for the item whenever it is accessed to ensure mutual exclusion.
 \begin{itemize}
-\item For methods \textbf{size()} and \textbf{is\_empty()} this is trivially true, since they only require and atomic load operation and no synchronisation 
+\item For methods \textbf{size()} and \textbf{is\_empty()} this is trivially true, since they only require an atomic load operation and no synchronisation 
 whatsoever.
 \end{itemize}
 For the rest of the public methods, we need to have a closer look at methods of other classes first:
@@ -131,7 +139,7 @@ In class \textbf{CuckooSet}
 Note that class \textbf{GlobalLockGuard} is only a RAII-wrapper (todo: is this the correct word?), which acquires all locks in it's constructor by using CuckooLock. It further provides a method to release all locks and does so automatically upon destruction. Thus, it's methods are starvation-free.\textbf{LockGuard} is analogous, except for handling one lock for a specific item only. 
 
 \begin{itemize}
-\item \textbf{contains()} simply acquires the necessary lock and is starvation free if the constructor and destructor if class LockGuard are (which we already proved).
+\item \textbf{contains()} simply acquires the necessary lock and is starvation free if the constructor and destructor of class LockGuard are (which we already proved).
 \item \textbf{remove()} obtains the required lock and then calls contains(), which again acquires the same lock. Since we use recursive mutexes, this is starvation-free. 
 \item Trusting that contains() and remove() are starvation-free and assuming that put() is as well (which will be proved immediately), it can be shown that \textbf{relocate()} is too: The maximum number of iterations of the loop is limited by a constant and we only call starvation-free methods. Thus this method is starvation-free.
 \item \textbf{resize()} and is similar to the above, except that the loop is bounded by a variable finite value.
@@ -179,9 +187,9 @@ Note that the x-axis is scaled with the binary logarithm.
 
 
 \begin{thebibliography}{9}
-\bibitem{almasi}
-   G. Almasi, Calin Cascaval, David A. Padua: 
-   \emph{Calculating Stack Distances Efficiently}
+\bibitem{herlihy}
+    M. Herlihy, N. Shavit:
+   \emph{The Art of Multiprocessor Programming}
 \end{thebibliography}
 
 \end{document}
