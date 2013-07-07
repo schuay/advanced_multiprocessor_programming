@@ -6,7 +6,7 @@ set key top left
 set xlabel 'Number of cores [byte]'
 set ylabel 'Time [s]'
 set logscale x 2
-#set logscale y
+set logscale y
 
 plot \
 '../data/1_striped.dat' using 1:2 title '2x1024 locks, 50\% contains, 25\% add operations' with linespoints,\
