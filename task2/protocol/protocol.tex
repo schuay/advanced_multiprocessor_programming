@@ -58,21 +58,7 @@
 * Good benchmark analysis.
 * Short document: 2-4 pages excluding plots and sourcecode. Description of data
   structure. Theoretical analysis. Benchmark (results, process).
-+
-+A couple of notes:
-+
-+Remove doesn't compact the set. In fact, I think it's impossible to *know* when
-+a compaction is possible since it depends on the hash functions.
-+
-+The refined set does not delete old mutex collections until the set is deleted.
-+This results in a little memory overhead but is necessary because we can't
-+simply delete old lock sets (other threads might still be accessing them). We
-+tried reference counting, but it ended up as the bottleneck for >~4 threads.
-+
-+For the same reason (= no garbage collection), we also had to introduce a
-+global lock in relocate() to protect ProbeSets from being deleted while still
-+in use.
-+
+
 +The Go implementation doesn't need either of these crutches. It's also designed
 +to work without reentrant locks and thread ids.
  \end{comment}
@@ -92,7 +78,7 @@ The basic idea is to provide two tables where different hash functions are used 
 Figure \ref{alg:cuckooHashing} shows this algorithm.
 \medskip
 \newline
-To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set} adds the 2-by-L array of locks as well as buckets for each table entry. When an element is added to a location and thus it's bucket, we check if the bucket now contains more than $PROBE\_THREASHOLD$ values. If so, we relocate the oldest value of that bucket. If it contains more than $PROBE_SIZE$ values, we need to resize the set.
+To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set} adds the 2-by-L array of locks as well as buckets (called Probesets by us) for each table entry. When an element is added to a location and thus it's bucket, we check if the Probeset now contains more than $PROBE\_THREASHOLD$ values. If so, we relocate the oldest value of that Probeset. If it contains more than $PROBE_SIZE$ values, we need to resize the set.
 
 \begin{algorithm}
 \caption{Cuckoo Hashing}
@@ -114,6 +100,15 @@ To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set} adds
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
+
+\section{Important implementation details}
+\label{sec:implDetails}
+The pseudo code in the book contains some crucial mistakes, which we address here:
+\begin{itemize}
+\item The Refined Cuckoo Hash Set does not delete old mutex collections until the set is deleted. This results in a little memory overhead which is necessary to ensure that no thread tries to access one of the old mutexes. We tried reference counting, but it ended up as the bottleneck for $>4$ threads. The book does not address this issue and simply assumes that garbage collection is available.
+\item For the same reason we also had to introduce a global lock in relocate() to protect ProbeSets from being deleted while in being used by other threads.
+\item The remove() operation does not compact the set. In fact, we think it is very hard to specify good criteria when a compaction is possible, since this depends on the hash functions.
+\end{itemize}
 
 \section{Progress guarantees}
 \label{sec:progressGuarantees}
