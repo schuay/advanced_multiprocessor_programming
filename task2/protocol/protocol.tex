@@ -360,6 +360,22 @@ that require the set to hold comparatively few elements.
 \label{fig:plot3}
 \end{figure}
 
+\section{Running the code}
+\begin{itemize}
+\item Our implementation is based on pheet revision 420.
+\item In CMakeLists.txt, make sure to set  \lstinline|PHEET_PATH| correctly.
+\item Include our cuckooset.hpp in test/set\_bench/SetBench.cpp
+\item Add a new run\_bench() call to run\_test()
+\item Set  \lstinline|ACTIVE\_TEST| to "test\_variants/amp/set.h" in test/settings.h
+\item In settings.mk, set the:
+\begin{itemize}
+\item Include path: INCLUDE\_PATH = -I. -I../path/to/cuckoo\_set/src
+\item Library search path as well as link libraries:
+      TEST\_LIBS = -L../path/to/cuckoo\_set/build/src/ -lcuckooset
+\end{itemize}
+\item make test \&\& LD\_LIBRARY\_PATH=../path/to/cuckoo\_set/build/src/ bin/pheet\_test
+\end{itemize}
+
 \section{Addendum: Go}
 
 The \verb|go| subfolder\footnote{This was done by Jakob Gruber only} contains an implementation of the refined cuckoo hash set
