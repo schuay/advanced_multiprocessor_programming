@@ -123,13 +123,13 @@ For the rest of the public methods, we need to have a closer look at methods of 
 \begin{itemize}
 \item In class \textbf{CuckooLock}, all methods are deadlock-free. All we do is locking and unlocking mutexes and since we do this in the same order at all points, deadlock may not occur (assuming that the callers ensure a correct sequence of calls to methods lock() and unlock() and that no thread stalls between calling lock() and unlock()). 
 \newline
-Since the standard for C++ \cite{cppstandard} does not address the issue of fairness (relevant sections: 30.2.5 "Requirements for Lockable types" and 30.4 "Mutual exclusion"), we can not claim starvation-freedom for methods in class CuckooLock.
+Since the standard for C++ \cite{cppstandard} does not address the issue of fairness or starvation (relevant sections: 30.2.5 "Requirements for Lockable types" and 30.4 "Mutual exclusion"), we can not claim starvation-freedom for methods in class CuckooLock. This is of little consequence for this paper, as we will show when analysing method acquire();
 \item All methods in class \textbf{AtomicMarkableReference} are trivially starvation-free since we only do some basic arithmetic and CAS-operations.
 \end{itemize}
 
 In class \textbf{CuckooSet}
 \begin{itemize}
-\item In \textbf{acquire()}, the caller loops until no \textit{other} thread has marked the set for resizing. Additionally, the caller will continue looping if another thread marked the set for resizing or the array of locks was recreated while the caller attempted to acquire the lock. This implies that the method is not starvation-free. It is deadlock-free: since we need to acquire only one lock and do not hold any other shared resources while attempting to do so.
+\item In \textbf{acquire()}, the caller loops until no \textit{other} thread has marked the set for resizing. Additionally, the caller will continue looping if another thread marked the set for resizing or the array of locks was recreated while the caller attempted to acquire the lock. This implies that the method is not starvation-free. It is deadlock-free: since we need to acquire only one lock and do not hold any other shared resources while attempting to do so. Note that this is sufficient for the method to not be starvation-free. If std::mutex would  give any guarantees about fairness, it would not have an influence here. 
 \item \textbf{release()} is deadlock-free, since we only unlock a mutex.
 \end{itemize}
 Note that class \textbf{GlobalLockGuard} is only a RAII-wrapper, which acquires all locks in it's constructor by using CuckooLock. It further provides a method to release all locks and does so automatically upon destruction. Thus, it's methods are deadlock-free.\textbf{LockGuard} is analogous, except for handling one lock for a specific item only. 
