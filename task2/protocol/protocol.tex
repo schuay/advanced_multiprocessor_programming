@@ -266,7 +266,23 @@ analogous, except for handling one lock for a specific item only.
 \end{itemize}
 
 \section{Linearizability}
-\label{serc:linearizability}
+\label{sec:linearizability}
+
+Most public functions in the cuckoo set variants consist of a single critical
+section which is protected by calls to \lstinline|acquire()| and
+\lstinline|release()|.  The linearization point of these functions is simply
+the point at which \lstinline|acquire()| returns.
+
+Both \lstinline|size()| and the derived function \lstinline|is_empty()| can be
+linearized when the atomic load of \lstinline|the_size| completes.
+
+\lstinline|put()| can contain three or more critical sections, each of which
+may change parts of the set which other threads can access. Since there can not
+be any single point at which the effects of the method seems to take place
+instantaneously, \lstinline|put()| has no linearization point. Only be
+restricting ourselves to calls which do not trigger either relocation or set
+growth can we again place the linearization point at the conclusion of
+\lstinline|acquire()|.
 
 \section{Performance Analysis}
 \label{sec:performance}
