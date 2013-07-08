@@ -10,11 +10,11 @@
 \usepackage{algpseudocode}
 \usepackage{graphicx}
 \usepackage{epstopdf}
-%page boarders
 \usepackage[top=3cm, bottom=3cm, left=2cm, right=2cm]{geometry}
 \usepackage{caption}
 \usepackage{color}
 \usepackage[lofdepth,lotdepth]{subfig}
+\usepackage[pdfborder={0 0 0}]{hyperref}
 
 \definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
 \definecolor{Gray}{gray}{0.5}
@@ -55,18 +55,18 @@
 \section{Introduction}
 Our task was to implement the \textbf{Concurrent Cuckoo Hash Set} as presented in \cite{herlihy}, pages 316-325. 
 \newline 
-As in the book, two versions are presented: The \textbf{Striped Cuckoo Hash Set} uses a fixed 2-by-L array of reentrant locks, where lock[i][j] guards the element at table[i][k] with $k\mod L = j$. This variant has the obvious disadvantage that the array of locks does not grow with the number of elements $n$ stored in the set. Thus, we expect the performance to decrease significantly for large $n$ and a small number of locks.
+We benchmarked and compared two versions: The \textbf{Striped Cuckoo Hash Set} uses a fixed 2-by-L array of reentrant locks, where \lstinline|lock[i][j]| guards the element at \lstinline|table[i][k]| with $k \mod L = j$. This variant has the obvious disadvantage that the array of locks does not grow with the number of elements $n$ stored in the set. Thus, we expect the performance to decrease significantly for large $n$ and a small number of locks.
 \newline
-The \textbf{Refined Cuckoo Hash Set} attempts to repair this issue by letting the number of locks grow with the the size of the set. This requires some additional synchronization, the performance impact of which will be studied in Section \ref{sec:performance}.
+The \textbf{Refined Cuckoo Hash Set} avoids this issue by letting the number of locks grow with the the size of the set. This requires some additional synchronization, the performance impact of which will be studied in Section \ref{sec:performance}.
 
 \section{Cuckoo Hash Set}
 The foundation of of the presented data structure is \textbf{Cuckoo Hashing}, an \textit{open-addressed} sequential hash set. This means that at each location determined by a hash function, only one element can reside at any given time. In contrast, a \textbf{closed-addressed} hash set provides a bucket at each location that is able to hold multiple items.
 \newline
-The basic idea is to provide two tables where different hash functions are used to map an element to a table location. If $hash0(x)$ maps a given element $x$ to a location that is not occupied, $x$ is simply put there. If this location happens to be already occupied, the currently stored element $y$ is kicked out to make room for $x$. $y$ is relocated to $hash1(y)$ using the same principle. This may of course create long chains of relocations with circular dependencies. Thus, only a fixed number of relocate operations are executed before the capacity of the set and thus the two tables is increased, prompting all elements to be re-added to the set.
+The basic idea is to provide two tables where different hash functions \lstinline|h0(), h1()| are used to map an element to a table location. If \lstinline|h0(x)| maps a given element \lstinline|x| to a location that is not occupied, \lstinline|x| is simply put there. If this location happens to be already occupied, the currently stored element \lstinline|y| is kicked out to make room for \lstinline|x|. \lstinline|y| is relocated to \lstinline|h1(y)| using the same principle. This may of course create long chains of relocations with circular dependencies. Thus, only a fixed number of relocate operations are executed before the capacity of the set and thus the two tables is increased, prompting all elements to be re-added to the set.
 Figure \ref{alg:cuckooHashing} shows this algorithm.
 \medskip
 \newline
-To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set} adds the 2-by-L array of locks as well as buckets (called Probesets by us) for each table entry. When an element is added to a location and thus it's bucket, we check if the Probeset now contains more than $PROBE\_THRESHOLD$ values. If so, we relocate the oldest value of that Probeset. If it contains more than $PROBE\_SIZE$ values, we need to resize the set.
+To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set} adds the 2-by-L array of locks as well as buckets (called Probesets by us) for each table entry. When an element is added to a location and thus it's bucket, we check if the Probeset now contains more than \lstinline|PROBE_THRESHOLD| values. If so, we relocate the oldest value of that Probeset. If it contains more than \lstinline|PROBE_SIZE| values, we need to resize the set.
 
 \begin{algorithm}
 \caption{Cuckoo Hashing}
@@ -77,9 +77,9 @@ To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set} adds
 		\State \Return false
 	\EndIf
 	\For{i = 0; i $<$ LIMIT; i++}
-		\If {(x = swap(0, hash0(x), x) == NULL}
+		\If {(x = swap(0, h0(x), x) == NULL}
 			\State \Return true
-		\ElsIf {(x = swap(0, hash1(x), x) == NULL}
+		\ElsIf {(x = swap(0, h1(x), x) == NULL}
 			\State \Return true
 		\EndIf
 	\EndFor
@@ -95,39 +95,39 @@ The pseudo code in the book contains one crucial mistake and some issues when im
 
 \begin{itemize}
 \item The Refined Cuckoo Hash Set does not delete old mutex collections until the set is deleted. This results in a little memory overhead which is necessary to ensure that no thread tries to access one of the old mutexes. We tried reference counting, but it ended up as the bottleneck for $>4$ threads. The book does not address this issue and simply assumes that garbage collection is available.
-\item For the same reason we also had to introduce a global lock in relocate() to protect ProbeSets from being deleted while still being used by other threads.
-\item The remove() operation does not compact the set. In fact, we think it is very hard to specify good criteria when a compaction is possible, since this depends on the hash functions.
+\item For the same reason we also had to introduce a global lock in \lstinline|relocate()| to protect probe sets from being deleted while still being used by other threads.
+\item The \lstinline|remove()| operation does not compact the set. In fact, we think it is very hard to specify good criteria when a compaction is possible, since this depends on the hash functions.
 
 \end{itemize}
 
 \section{Progress guarantees}
 \label{sec:progressGuarantees}
-We show that each public method of class \textbf{CuckooSet} is deadlock-free. Unfortunately, the data structure is not starvation-free, only some methods are. Note that it is assumed that std::set is starvation-free if at no time the same element is accessed by more than one thread. We ensure this by holding a lock for the item whenever it is accessed to ensure mutual exclusion.
+We show that each public method of class \lstinline|CuckooSet| is deadlock-free. Unfortunately, the data structure is not starvation-free, only some methods are. Note that it is assumed that \lstinline|std::set| is starvation-free if at no time the same element is accessed by more than one thread. We ensure this by holding a lock for the item whenever it is accessed to ensure mutual exclusion.
 \begin{itemize}
-\item For methods \textbf{size()} and \textbf{is\_empty()} this is trivially true, since they only require an atomic load operation and no synchronisation 
+\item For methods \lstinline|size()| and \lstinline|is_empty()| this is trivially true, since they only require an atomic load operation and no synchronisation 
 whatsoever. They are thus starvation-free.
 \end{itemize}
 For the rest of the public methods, we need to have a closer look at methods of other classes first:
 \begin{itemize}
-\item In class \textbf{CuckooLock}, all methods are deadlock-free. All we do is locking and unlocking mutexes and since we do this in the same order at all points, deadlock may not occur (assuming that the callers ensure a correct sequence of calls to methods lock() and unlock() and that no thread stalls between calling lock() and unlock()). 
+\item In class \lstinline|CuckooLock|, all methods are deadlock-free. All we do is locking and unlocking mutexes and since we do this in the same order at all points, deadlock may not occur (assuming that the callers ensure a correct sequence of calls to methods \lstinline|lock()| and \lstinline|unlock()| and that no thread stalls between calling \lstinline|lock()| and \lstinline|unlock())|. 
 \newline
-Since the standard for C++ \cite{cppstandard} does not address the issue of fairness or starvation (relevant sections: 30.2.5 "Requirements for Lockable types" and 30.4 "Mutual exclusion"), we can not claim starvation-freedom for methods in class CuckooLock. This is of little consequence for this paper, as we will show when analysing method acquire();
-\item All methods in class \textbf{AtomicMarkableReference} are trivially starvation-free since we only do some basic arithmetic and CAS-operations.
+Since the standard for C++ \cite{cppstandard} does not address the issue of fairness or starvation (relevant sections: 30.2.5 "Requirements for Lockable types" and 30.4 "Mutual exclusion"), we can not claim starvation-freedom for methods in class \lstinline|CuckooLock|. This is of little consequence for this paper, as we will show when analysing method \lstinline|acquire()|;
+\item All methods in class \lstinline|AtomicMarkableReference| are trivially starvation-free since we only do some basic arithmetic and CAS-operations.
 \end{itemize}
 
-In class \textbf{CuckooSet}
+In class \lstinline|CuckooSet|
 \begin{itemize}
-\item In \textbf{acquire()}, the caller loops until no \textit{other} thread has marked the set for resizing. Additionally, the caller will continue looping if another thread marked the set for resizing or the array of locks was recreated while the caller attempted to acquire the lock. This implies that the method is not starvation-free. It is deadlock-free: since we need to acquire only one lock and do not hold any other shared resources while attempting to do so. Note that this is sufficient for the method to not be starvation-free. If std::mutex would  give any guarantees about fairness, it would not have an influence here. 
-\item \textbf{release()} is deadlock-free, since we only unlock a mutex.
+\item In \lstinline|acquire()|, the caller loops until no \textit{other} thread has marked the set for resizing. Additionally, the caller will continue looping if another thread marked the set for resizing or the array of locks was recreated while the caller attempted to acquire the lock. This implies that the method is not starvation-free. It is deadlock-free: since we need to acquire only one lock and do not hold any other shared resources while attempting to do so. Note that this is sufficient for the method to not be starvation-free. If \lstinline|std::mutex| would  give any guarantees about fairness, it would not have an influence here. 
+\item \lstinline|release()| is deadlock-free, since we only unlock a mutex.
 \end{itemize}
-Note that class \textbf{GlobalLockGuard} is only a RAII-wrapper, which acquires all locks in it's constructor by using CuckooLock. It further provides a method to release all locks and does so automatically upon destruction. Thus, it's methods are deadlock-free.\textbf{LockGuard} is analogous, except for handling one lock for a specific item only. 
+Note that class \lstinline|GlobalLockGuard| is only a RAII-wrapper, which acquires all locks in it's constructor by using \lstinline|CuckooLock.| It further provides a method to release all locks and does so automatically upon destruction. Thus, it's methods are deadlock-free.\lstinline|LockGuard| is analogous, except for handling one lock for a specific item only. 
 
 \begin{itemize}
-\item \textbf{contains()} simply acquires the necessary lock and is deadlock- free if the constructor and destructor of class LockGuard are (which we already proved).
-\item \textbf{remove()} obtains the required lock and then calls contains(), which again acquires the same lock. Since we use recursive mutexes, this is deadlock-free. 
-\item Trusting that contains() and remove() are deadlock-free and assuming that put() is as well (which will be proved immediately), it can be shown that \textbf{relocate()} is too: The maximum number of iterations of the loop is limited by a constant and we only call starvation-free methods. Thus this method is deadlock-free.
-\item \textbf{resize()} and is similar to the above, except that the loop is bounded by a variable finite value.
-\item \textbf{put()} is trivially deadlock-free if resize() and relocate() are, since we have a simple sequence of statements. 
+\item \lstinline|contains()| simply acquires the necessary lock and is deadlock- free if the constructor and destructor of class \lstinline|LockGuard| are (which we already proved).
+\item \lstinline|remove()| obtains the required lock and then calls \lstinline|contains()|, which again acquires the same lock. Since we use recursive mutexes, this is deadlock-free. 
+\item Trusting that \lstinline|contains()| and \lstinline|remove()| are deadlock-free and assuming that \lstinline|put()| is as well (which will be proved immediately), it can be shown that \lstinline|relocate()| is too: The maximum number of iterations of the loop is limited by a constant and we only call starvation-free methods. Thus this method is deadlock-free.
+\item \lstinline|resize()| and is similar to the above, except that the loop is bounded by a variable finite value.
+\item \lstinline|put()| is trivially deadlock-free if \lstinline|resize()| and \lstinline|relocate()| are, since we have a simple sequence of statements. 
 \end{itemize}
 
 \section{Linearizability}
@@ -189,7 +189,7 @@ However, the performance of the \textbf{Striped Cuckoo Hash Set} strongly depend
 	document number N3337, obtained on July $8^{th}$, 2013.	
 	http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf
 	\newline
-	Note: The standard is not for freely available and not provided in the university's  library. The quoted draft is the first published after the C++11 standard, which it contains.
+	Note: The standard is not available for free and not provided in the university's  library. The quoted draft is the first published after the C++11 standard, which it contains.
 
 \end{thebibliography}
 
