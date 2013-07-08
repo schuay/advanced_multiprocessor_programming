@@ -311,6 +311,30 @@ y-axis in Figure \ref{fig:plot3} is scaled with the decadic logarithm.
 \label{fig:plot2}
 \end{figure}
 
+We expected both the striped and refined hash set variants to exhibit some
+overhead in contrast to the global lock set for low thread counts. With rising
+thread counts, the striped variant should scale very well up until a certain
+point at which the number of locks (which does not increase with the number of
+probe sets) becomes a bottleneck. The refined variant is expected to perform
+well for all multi-threaded usage.
+
+Results show these expectations to be justified. For single-threaded operation,
+the global lock set performs best by a factor of 4. For two processors, all
+implementations are roughly equal; all higher thread counts clearly favor
+our concurrent set versions.
+
+The striped variant has a small runtime advantage at smaller thread counts but
+is superceded by the refined version at around 8 threads. We believe that 
+Figure \ref{fig:plot2}
+exhibits a larger discrepancy between these variants because the set becomes
+less efficient once the the number of probe sets exceeds the number of locks,
+and this set of benchmarks contains many more \lstinline|add()| calls.
+
+Perhaps a surprising point was how much performance was affected by using
+reference counting (through \lstinline|std::shared_ptr|) to hold our locks.
+Even though the implementation of the pointer is lock-free, peak performance was
+reached at only 6 threads and decreased with increasing thread counts.
+
 However, the performance of the \emph{Striped Cuckoo Hash Set} strongly
 depends on the fixed number of locks. Although this variant performs well
 with an array of locks of size 2x1024, performance decreases drastically with
