@@ -61,28 +61,28 @@ TODO:
 
 \section{Introduction}
 
-Our task was to implement the \textbf{Concurrent Cuckoo Hash Set} as presented
+Our task was to implement the \emph{Concurrent Cuckoo Hash Set} as presented
 in \cite{herlihy}, pages 316-325. 
 
-We benchmarked and compared two versions: The \textbf{Striped Cuckoo Hash Set}
+We benchmarked and compared two versions: The \emph{Striped Cuckoo Hash Set}
 uses a fixed 2-by-L array of reentrant locks, where \lstinline|lock[i][j]|
 guards the element at \lstinline|table[i][k]| with $k \mod L = j$. This variant
 has the obvious disadvantage that the array of locks does not grow with the
 number of elements $n$ stored in the set. Thus, we expect the performance to
 decrease significantly for large $n$ and a small number of locks.
 
-The \textbf{Refined Cuckoo Hash Set} avoids this issue by letting the number of
+The \emph{Refined Cuckoo Hash Set} avoids this issue by letting the number of
 locks grow with the the size of the set. This requires some additional
 synchronization, the performance impact of which will be studied in Section
 \ref{sec:performance}.
 
 \section{Cuckoo Hash Set}
 
-The foundation of of the presented data structure is \textbf{Cuckoo Hashing},
+The foundation of of the presented data structure is \emph{Cuckoo Hashing},
 an \textit{open-addressed} sequential hash set. This means that at each
 location determined by a hash function, only one element can reside at any
 given time\footnote{Or, as in this case, a fixed number of elements.}. In
-contrast, a \textbf{closed-addressed} hash set provides a bucket able to hold
+contrast, a \emph{closed-addressed} hash set provides a bucket able to hold
 multiple items at each location.
 
 Cuckoo hashing uses two tables with different hash functions
@@ -104,12 +104,12 @@ by exceeding the \lstinline|PROBE_THRESHOLD| limit. Again, the set is resized
 if no space is found for a particular item after a fixed number of relocation
 iterations.
 
-To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set}
+To allow concurrent access to the set, the \emph{Striped Cuckoo Hash Set}
 adds a 2-by-L array of locks, with each protecting one or more probe sets.
 This array of locks does not grow along with the set size, and thus turns into
 a performance bottleneck as the number of threads and probe sets grow.
 
-This limitation is avoided in the \textbf{Refined Cuckoo Hash Set} by letting
+This limitation is avoided in the \emph{Refined Cuckoo Hash Set} by letting
 the size lock array always equal the size of the corresponding array of probe
 sets. Special care must be taken when acquiring locks while
 \lstinline|resize()| is executing concurrently.
@@ -167,7 +167,7 @@ as follows:
     an option, but introduce a bottleneck whenever a probe set is accessed.
     Testing also showed that this global lock did not have a large effect on runtimes.
 
-\item Locking in the \textbf{Refined Cuckoo Hash Set} again relies on garbage collection, and
+\item Locking in the \emph{Refined Cuckoo Hash Set} again relies on garbage collection, and
     in fact cannot be easily implemented without it. Specifically, there is no point
     in \lstinline|resize()| at which the locks may be deleted without possibly leaving
     other threads with invalid pointers. Keeping the locks in a reference-counted pointer
@@ -276,13 +276,13 @@ Benchmarking was performed on the saturn system. Pheet was compiled using
 compiler as well as makeflags \verb|-Wall -Wextra -pedantic -std=gnu++11 -O3|.
 
 Benchmarks wer assembled by selecting the the minimum execution time of 10 runs
-was taken for each value\footnote{With the exception of the \textbf{Striped
+was taken for each value\footnote{With the exception of the \emph{Striped
 Cuckoo Set} with only 8 locks, which exhibited very long execution times}.
 
 Figures \ref{fig:plot1} and \ref{fig:plot2} show the performance for the
 default set implementation provided by pheet using a global lock, our
-\textbf{Striped Cuckoo Set} implementation with a 2x1024 locks and our
-\textbf{Refined Cuckoo Set}, both with an initial capacity of 2x1024 elements
+\emph{Striped Cuckoo Set} implementation with a 2x1024 locks and our
+\emph{Refined Cuckoo Set}, both with an initial capacity of 2x1024 elements
 and a limit of 512 relocate operations.  Figure \ref{fig:plot1} shows the
 performance when 99\% of all operations on the set are calls to
 \lstinline|contains()| and 0.5\% are calls to \lstinline|add()|. Figure
@@ -311,7 +311,7 @@ y-axis in Figure \ref{fig:plot3} is scaled with the decadic logarithm.
 \label{fig:plot2}
 \end{figure}
 
-However, the performance of the \textbf{Striped Cuckoo Hash Set} strongly
+However, the performance of the \emph{Striped Cuckoo Hash Set} strongly
 depends on the fixed number of locks. Although this variant performs well
 with an array of locks of size 2x1024, performance decreases drastically with
 less locks. This is illustrated in Figure \ref{fig:plot3}. Providing a larger
@@ -322,7 +322,7 @@ that require the set to hold comparatively few elements.
 \begin{center}
 \includegraphics{striped.eps}
 \end{center}
-\caption{Performance comparison: \textbf{Striped Cuckoo Set} with different amount of locks}
+\caption{Performance comparison: \emph{Striped Cuckoo Set} with different amount of locks}
 \label{fig:plot3}
 \end{figure}
 
