@@ -114,30 +114,32 @@ The pseudo code in the book contains one crucial mistake and some issues when im
 
 \section{Progress guarantees}
 \label{sec:progressGuarantees}
-We show that each public method of class \textbf{CuckooSet} is starvation- and thus deadlock-free. Note that it is assumed that std::set is starvation-free if at no time the same element is accessed by more than one thread. We ensure this by holding a lock for the item whenever it is accessed to ensure mutual exclusion.
+We show that each public method of class \textbf{CuckooSet} is deadlock-free. Unfortunately, the data structure is not starvation-free, only some methods are. Note that it is assumed that std::set is starvation-free if at no time the same element is accessed by more than one thread. We ensure this by holding a lock for the item whenever it is accessed to ensure mutual exclusion.
 \begin{itemize}
 \item For methods \textbf{size()} and \textbf{is\_empty()} this is trivially true, since they only require an atomic load operation and no synchronisation 
-whatsoever.
+whatsoever. They are thus starvation-free.
 \end{itemize}
 For the rest of the public methods, we need to have a closer look at methods of other classes first:
 \begin{itemize}
-\item In class \textbf{CuckooLock}, all methods are starvation- and deadlock-free. All we do is locking and unlocking mutexes and since we do this in the same order at all points, starvation may not occur (assuming that the callers ensure a correct sequence of calls to methods lock() and unlock() and that no thread stalls between calling lock() and unlock()).
+\item In class \textbf{CuckooLock}, all methods are deadlock-free. All we do is locking and unlocking mutexes and since we do this in the same order at all points, deadlock may not occur (assuming that the callers ensure a correct sequence of calls to methods lock() and unlock() and that no thread stalls between calling lock() and unlock()). 
+\newline
+Since the standard for C++ \cite{cppstandard} does not address the issue of fairness (relevant sections: 30.2.5 "Requirements for Lockable types" and 30.4 "Mutual exclusion"), we can not claim starvation-freedom for methods in class CuckooLock.
 \item All methods in class \textbf{AtomicMarkableReference} are trivially starvation-free since we only do some basic arithmetic and CAS-operations.
 \end{itemize}
 
 In class \textbf{CuckooSet}
 \begin{itemize}
-\item In \textbf{acquire()}, the caller loops until no \textit{other} thread has marked the set for resizing. Additionally, the caller will continue looping if another thread marked the set for resizing or the array of locks was recreated while the caller attempted to acquire the lock. However, assuming that the resize-operation will eventually finish (which we will show later), the caller will be able to obtain the correct lock and thus finish the call.
-\item \textbf{release()} is starvation free, since we only unlock a mutex.
+\item In \textbf{acquire()}, the caller loops until no \textit{other} thread has marked the set for resizing. Additionally, the caller will continue looping if another thread marked the set for resizing or the array of locks was recreated while the caller attempted to acquire the lock. This implies that the method is not starvation-free. It is deadlock-free: since we need to acquire only one lock and do not hold any other shared resources while attempting to do so.
+\item \textbf{release()} is deadlock-free, since we only unlock a mutex.
 \end{itemize}
-Note that class \textbf{GlobalLockGuard} is only a RAII-wrapper (todo: is this the correct word?), which acquires all locks in it's constructor by using CuckooLock. It further provides a method to release all locks and does so automatically upon destruction. Thus, it's methods are starvation-free.\textbf{LockGuard} is analogous, except for handling one lock for a specific item only. 
+Note that class \textbf{GlobalLockGuard} is only a RAII-wrapper, which acquires all locks in it's constructor by using CuckooLock. It further provides a method to release all locks and does so automatically upon destruction. Thus, it's methods are deadlock-free.\textbf{LockGuard} is analogous, except for handling one lock for a specific item only. 
 
 \begin{itemize}
-\item \textbf{contains()} simply acquires the necessary lock and is starvation free if the constructor and destructor of class LockGuard are (which we already proved).
-\item \textbf{remove()} obtains the required lock and then calls contains(), which again acquires the same lock. Since we use recursive mutexes, this is starvation-free. 
-\item Trusting that contains() and remove() are starvation-free and assuming that put() is as well (which will be proved immediately), it can be shown that \textbf{relocate()} is too: The maximum number of iterations of the loop is limited by a constant and we only call starvation-free methods. Thus this method is starvation-free.
+\item \textbf{contains()} simply acquires the necessary lock and is deadlock- free if the constructor and destructor of class LockGuard are (which we already proved).
+\item \textbf{remove()} obtains the required lock and then calls contains(), which again acquires the same lock. Since we use recursive mutexes, this is deadlock-free. 
+\item Trusting that contains() and remove() are deadlock-free and assuming that put() is as well (which will be proved immediately), it can be shown that \textbf{relocate()} is too: The maximum number of iterations of the loop is limited by a constant and we only call starvation-free methods. Thus this method is deadlock-free.
 \item \textbf{resize()} and is similar to the above, except that the loop is bounded by a variable finite value.
-\item \textbf{put()} is trivially starvation-free if resize() and relocate() are, since we have a simple sequence of statements. 
+\item \textbf{put()} is trivially deadlock-free if resize() and relocate() are, since we have a simple sequence of statements. 
 \end{itemize}
 
 \section{Linearizability}
@@ -184,6 +186,13 @@ Note that the x-axis is scaled with the binary logarithm.
 \bibitem{herlihy}
     M. Herlihy, N. Shavit:
    \emph{The Art of Multiprocessor Programming}
+\bibitem{cppstandard}	
+	\emph{Working Draft, Standard for Programming Language C++},
+	document number N3337, obtained on July $8^{th}$, 2013.	
+	http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf
+	\newline
+	Note: The standard is not for freely available and not provided in the university's  library. The quoted draft is the first published after the C++11 standard, which it contains.
+
 \end{thebibliography}
 
 \end{document}
