@@ -351,6 +351,15 @@ reference counting (through \lstinline|std::shared_ptr|) to hold our locks.
 Even though the implementation of the pointer is lock-free, peak performance was
 reached at only 6 threads and decreased with increasing thread counts.
 
+\begin{figure}[H]
+\begin{center}
+\includegraphics{refined.eps}
+\end{center}
+\caption{Performance comparison: \emph{Refined Cuckoo Set} with reference counting}
+\label{fig:plot4}
+\end{figure}
+
+
 However, the performance of the \emph{Striped Cuckoo Hash Set} strongly
 depends on the fixed number of locks. Although this variant performs well
 with an array of locks of size 2x1024, performance decreases drastically with
