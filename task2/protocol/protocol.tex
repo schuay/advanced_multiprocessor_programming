@@ -152,7 +152,7 @@ For benchmarks, the minimum execution time of 10 runs was taken for each value. 
 \newline
 Figure \ref{fig:plot1} and \ref{fig:plot2} show the performance for the default set implementation provided by pheet using a global lock, our Striped Cuckoo Set implementation with a 2x1024 locks and our Refined Cuckoo Set, both with an initial capacity of 2x1024 elements and a limit of 512 relocate-operations. Figure \ref{fig:plot1} shows the performance when 99\% of all operations on the set are calls to contains() and 0.5\% are calls to add(). Figure \ref{fig:plot2} shows the same for a benchmark with 50\% of all operations on the set are calls to contains() and 25\% are calls to add().
 \newline
-Note that the x-axis is scaled with the binary logarithm.
+Note that the x-axis is scaled with the binary logarithm in all diagrams. The y-axis in Figure \ref{fig:plot3} is scaled with the decadic logarithm.
 
 \begin{figure}
 \begin{center}
