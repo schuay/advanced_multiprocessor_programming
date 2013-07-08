@@ -145,7 +145,7 @@ Note that class \textbf{GlobalLockGuard} is only a RAII-wrapper, which acquires 
 \section{Linearizability}
 \label{serc:linearizability}
 
-\section{Performance}
+\section{Performance analysis}
 \label{sec:performance}
 For benchmarks, the minimum execution time of 10 runs was taken for each value. Except when measuring performance of the Striped Cuckoo Set with only 8 locks, where the minimum of only 3 runs was taken (because execution time is rather high).
 \medskip
@@ -170,6 +170,8 @@ Note that the x-axis is scaled with the binary logarithm in all diagrams. The y-
 \label{fig:plot2}
 \end{figure}
 
+However, the performance of the \textbf{Striped Cuckoo Hash Set} strongly depends on the fixed number of looks. Although this variant is performing well with an array of locks of size 2x1024, performance decreases drastically with less locks. This is illustrated in Figure \ref{fig:plot3}. Providing a larger number of locks, on the other hand, increases memory overhead for applications that require the set to hold comparatively few elements.
+
 \begin{figure}[H]
 \begin{center}
 \includegraphics{striped.eps}
@@ -177,9 +179,6 @@ Note that the x-axis is scaled with the binary logarithm in all diagrams. The y-
 \caption{Performance comparison Striped Cuckoo Set with different amount of locks}
 \label{fig:plot3}
 \end{figure}
-
-\section{Analysis}
-\label{sec:analysis}
 
 \pagebreak
 
