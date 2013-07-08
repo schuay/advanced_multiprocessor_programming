@@ -54,6 +54,7 @@
 \end{comment}
 
 \section{Introduction}
+
 Our task was to implement the \textbf{Concurrent Cuckoo Hash Set} as presented
 in \cite{herlihy}, pages 316-325. 
 
@@ -70,30 +71,42 @@ synchronization, the performance impact of which will be studied in Section
 \ref{sec:performance}.
 
 \section{Cuckoo Hash Set}
+
 The foundation of of the presented data structure is \textbf{Cuckoo Hashing},
 an \textit{open-addressed} sequential hash set. This means that at each
 location determined by a hash function, only one element can reside at any
-given time. In contrast, a \textbf{closed-addressed} hash set provides a bucket
-at each location that is able to hold multiple items.
+given time\footnote{Or, as in this case, a fixed number of elements.}. In
+contrast, a \textbf{closed-addressed} hash set provides a bucket able to hold
+multiple items at each location.
 
-The basic idea is to provide two tables where different hash functions
-\lstinline|h0(), h1()| are used to map an element to a table location. If
-\lstinline|h0(x)| maps a given element \lstinline|x| to a location that is not
-occupied, \lstinline|x| is simply put there. If this location happens to be
-already occupied, the currently stored element \lstinline|y| is kicked out to
-make room for \lstinline|x|. \lstinline|y| is relocated to \lstinline|h1(y)|
-using the same principle. This may of course create long chains of relocations
-with circular dependencies. Thus, only a fixed number of relocate operations
-are executed before the capacity of the set and thus the two tables is
-increased, prompting all elements to be re-added to the set.
-Figure \ref{alg:cuckooHashing} shows this algorithm.
+Cuckoo hashing uses two tables with different hash functions
+\lstinline|h0(), h1()|. If \lstinline|h0(x)| maps a given element \lstinline|x|
+to a location that is not occupied, \lstinline|x| is simply put there. If this
+location happens to be already occupied, the currently stored element
+\lstinline|y| is kicked out to make room for \lstinline|x|. \lstinline|y| is
+relocated to \lstinline|h1(y)| using the same principle. This may of course
+create long chains of relocations with circular dependencies. Thus, relocations
+are limited to a fixed number of iterations before the capacity of the set and
+thus the two tables is increased, prompting all elements to be re-added to the
+set.  Figure \ref{alg:cuckooHashing} shows this algorithm.
+
+The sets as implemented during this project use a slight variation of this
+basic procedure. Each table address points to a data structure called probe sets
+which can store a fixed number of items (\lstinline|PROBE_SIZE|), but prefer
+to store \lstinline|PROBE_THRESHOLD| items or less. Relocation is triggered
+by exceeding the \lstinline|PROBE_THRESHOLD| limit. Again, the set is resized
+if no space is found for a particular item after a fixed number of relocation
+iterations.
 
 To allow concurrent access to the set, the \textbf{Striped Cuckoo Hash Set}
-adds the 2-by-L array of locks as well as buckets (called Probesets by us) for
-each table entry. When an element is added to a location and thus it's bucket,
-we check if the Probeset now contains more than \lstinline|PROBE_THRESHOLD|
-values. If so, we relocate the oldest value of that Probeset. If it contains
-more than \lstinline|PROBE_SIZE| values, we need to resize the set.
+adds a 2-by-L array of locks, with each protecting one or more probe sets.
+This array of locks does not grow along with the set size, and thus turns into
+a performance bottleneck as the number of threads and probe sets grow.
+
+This limitation is avoided in the \textbf{Refined Cuckoo Hash Set} by letting
+the size lock array always equal the size of the corresponding array of probe
+sets. Special care must be taken when acquiring locks while
+\lstinline|resize()| is executing concurrently.
 
 \begin{algorithm}
 \caption{Cuckoo Hashing}
