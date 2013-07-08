@@ -377,6 +377,9 @@ and made an interesting contrast to C++:
     We modified all functions to work with standard locks by passing the
     lock object into the function itself. If a lock had already been acquired,
     we simply passed a NOP lock.
+\item It is not possible to retrieve a goroutine id (similar to a thread id in
+    C++) in Go. Luckily, the modifications made in the previous point make
+    goroutine ids redundant as well.
 \end{itemize}
 
 Further conveniences included the \lstinline|defer| statement (which executes
