@@ -51,6 +51,12 @@
 
 +The Go implementation doesn't need either of these crutches. It's also designed
 +to work without reentrant locks and thread ids.
+
+TODO:
+- which variant performs better when?
+- asymptotic behaviour
+- where is the cross-over point?
+- anything unexpected?
 \end{comment}
 
 \section{Introduction}
@@ -173,40 +179,50 @@ as follows:
     some memory overhead, but preserves high performance without leaking memory.
 \end{itemize}
 
-\section{Progress guarantees}
+\section{Progress Guarantees}
 \label{sec:progressGuarantees}
-We show that each public method of class \lstinline|CuckooSet| is
-deadlock-free. Unfortunately, the data structure is not starvation-free, only
-some methods are. Note that it is assumed that \lstinline|std::set| is
+
+We show that each public method of the class \lstinline|CuckooSet| in its
+refined variant is deadlock-free\footnote{Unfortunately, \lstinline|acquire()|
+is not starvation-free. We think this could be improved with some further
+work.}.
+
+Note that it is assumed that \lstinline|std::set| is
 starvation-free if at no time the same element is accessed by more than one
 thread. We ensure this by holding a lock for the item whenever it is accessed
 to ensure mutual exclusion.
+
 \begin{itemize}
 \item For methods \lstinline|size()| and \lstinline|is_empty()| this is
     trivially true, since they only require an atomic load operation and no
-    synchronisation 
-whatsoever. They are thus starvation-free.
+    synchronisation whatsoever. They are thus starvation-free.
 \end{itemize}
+
 For the rest of the public methods, we need to have a closer look at methods of
 other classes first:
-\begin{itemize}
-\item In class \lstinline|CuckooLock|, all methods are deadlock-free. All we do
-    is locking and unlocking mutexes and since we do this in the same order at
-    all points, deadlock may not occur (assuming that the callers ensure a
-    correct sequence of calls to methods \lstinline|lock()| and
-    \lstinline|unlock()| and that no thread stalls between calling
-    \lstinline|lock()| and \lstinline|unlock())|. 
 
-Since the standard for C++ \cite{cppstandard} does not address the issue of
-fairness or starvation (relevant sections: 30.2.5 "Requirements for Lockable
-types" and 30.4 "Mutual exclusion"), we can not claim starvation-freedom for
-methods in class \lstinline|CuckooLock|. This is of little consequence for this
-paper, as we will show when analysing method \lstinline|acquire()|;
+\begin{itemize}
+\item In class \lstinline|CuckooLock|, all methods are deadlock-free.
+    Synchronization is handled by locking and unlocking mutexes. Since locks
+    are accessed in the same order at all points (and the used
+    \lstinline|std::recursive_lock| implementation is reentrant), deadlock may
+    not occur. It is assumed that the callers ensure a correct sequence of
+    calls to methods \lstinline|lock()| and \lstinline|unlock()| and that no
+    thread stalls between calling \lstinline|lock()| and \lstinline|unlock()|.
+
+    Since the standard for C++ \cite{cppstandard} does not address the issue of
+    fairness or starvation (relevant sections: 30.2.5 "Requirements for Lockable
+    types" and 30.4 "Mutual exclusion"), we can not claim starvation-freedom for
+    methods in class \lstinline|CuckooLock|. This is of little consequence for this
+    paper, as we will show when analysing method \lstinline|acquire()|.
+
 \item All methods in class \lstinline|AtomicMarkableReference| are trivially
-    starvation-free since we only do some basic arithmetic and CAS-operations.
+    starvation-free since they consist solely of basic arithmetic and check-and-set
+    operations.
 \end{itemize}
 
-In class \lstinline|CuckooSet|
+In class \lstinline|CuckooSet|:
+
 \begin{itemize}
 \item In \lstinline|acquire()|, the caller loops until no \textit{other} thread
     has marked the set for resizing. Additionally, the caller will continue
@@ -217,28 +233,34 @@ In class \lstinline|CuckooSet|
     attempting to do so. Note that this is sufficient for the method to not be
     starvation-free. If \lstinline|std::mutex| would  give any guarantees about
     fairness, it would not have an influence here. 
+
 \item \lstinline|release()| is deadlock-free, since we only unlock a mutex.
 \end{itemize}
+
 Note that class \lstinline|GlobalLockGuard| is only a RAII-wrapper, which
-acquires all locks in it's constructor by using \lstinline|CuckooLock.| It
+acquires all locks in it's constructor by using \lstinline|CuckooLock|. It
 further provides a method to release all locks and does so automatically upon
-destruction. Thus, it's methods are deadlock-free.\lstinline|LockGuard| is
+destruction. Thus, it's methods are deadlock-free. \lstinline|LockGuard| is
 analogous, except for handling one lock for a specific item only. 
 
 \begin{itemize}
 \item \lstinline|contains()| simply acquires the necessary lock and is
     deadlock- free if the constructor and destructor of class
     \lstinline|LockGuard| are (which we already proved).
+
 \item \lstinline|remove()| obtains the required lock and then calls
     \lstinline|contains()|, which again acquires the same lock. Since we use
     recursive mutexes, this is deadlock-free. 
+
 \item Trusting that \lstinline|contains()| and \lstinline|remove()| are
     deadlock-free and assuming that \lstinline|put()| is as well (which will be
     proved immediately), it can be shown that \lstinline|relocate()| is too:
     The maximum number of iterations of the loop is limited by a constant and
     we only call starvation-free methods. Thus this method is deadlock-free.
+
 \item \lstinline|resize()| and is similar to the above, except that the loop is
     bounded by a variable finite value.
+
 \item \lstinline|put()| is trivially deadlock-free if \lstinline|resize()| and
     \lstinline|relocate()| are, since we have a simple sequence of statements. 
 \end{itemize}
@@ -246,7 +268,7 @@ analogous, except for handling one lock for a specific item only.
 \section{Linearizability}
 \label{serc:linearizability}
 
-\section{Performance analysis}
+\section{Performance Analysis}
 \label{sec:performance}
 For benchmarks, the minimum execution time of 10 runs was taken for each value.
 Except when measuring performance of the Striped Cuckoo Set with only 8 locks,
@@ -264,16 +286,6 @@ the set are calls to contains() and 25\% are calls to add().
 
 Note that the x-axis is scaled with the binary logarithm in all diagrams. The
 y-axis in Figure \ref{fig:plot3} is scaled with the decadic logarithm.
-
-\begin{comment}
-todo:
-- which variant performs better when?
-- asymptotic behaviour
-- where is the cross-over point?
-- anything unexpected?
-
-\end{comment}
-
 
 \begin{figure}[H]
 \begin{center}
