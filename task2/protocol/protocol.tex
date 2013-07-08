@@ -12,15 +12,9 @@
 \usepackage{epstopdf}
 %page boarders
 \usepackage[top=3cm, bottom=3cm, left=2cm, right=2cm]{geometry}
-
-
-
-
 \usepackage{caption}
 \usepackage{color}
 \usepackage[lofdepth,lotdepth]{subfig}
-
-
 
 \definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
 \definecolor{Gray}{gray}{0.5}
@@ -48,11 +42,6 @@
 
 \maketitle
 
-%y\tableofcontents
-%\pagebreak
-
-%\section{Specification}
-
 \begin{comment}
 * Good theoretical analysis (invariants, linearizability, progress guarantees).
 * Good benchmark analysis.
@@ -62,7 +51,6 @@
 +The Go implementation doesn't need either of these crutches. It's also designed
 +to work without reentrant locks and thread ids.
  \end{comment}
-\end{comment}
 
 \section{Introduction}
 Our task was to implement the \textbf{Concurrent Cuckoo Hash Set} as presented in \cite{herlihy}, pages 316-325. 
@@ -154,6 +142,11 @@ Figure \ref{fig:plot1} and \ref{fig:plot2} show the performance for the default 
 \newline
 Note that the x-axis is scaled with the binary logarithm in all diagrams. The y-axis in Figure \ref{fig:plot3} is scaled with the decadic logarithm.
 
+\begin{comment}
+
+\end{comment}
+
+
 \begin{figure}[H]
 \begin{center}
 \includegraphics{099contains_005add.eps}
@@ -176,7 +169,7 @@ However, the performance of the \textbf{Striped Cuckoo Hash Set} strongly depend
 \begin{center}
 \includegraphics{striped.eps}
 \end{center}
-\caption{Performance comparison Striped Cuckoo Set with different amount of locks}
+\caption{Performance comparison: Striped Cuckoo Set with different amount of locks}
 \label{fig:plot3}
 \end{figure}
 
