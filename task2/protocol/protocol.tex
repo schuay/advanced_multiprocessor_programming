@@ -16,6 +16,7 @@
 \usepackage[lofdepth,lotdepth]{subfig}
 \usepackage[pdfborder={0 0 0}]{hyperref}
 \usepackage[parfill]{parskip}
+\usepackage{booktabs}
 
 \definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
 \definecolor{Gray}{gray}{0.5}
@@ -375,6 +376,50 @@ that require the set to hold comparatively few elements.
 \label{fig:plot3}
 \end{figure}
 
+\section{Addendum: Go}
+
+The \verb|go| subfolder contains an implementation of the refined cuckoo hash set
+written in the Go language. A couple of main points shaped this implementation
+and made an interesting contrast to C++:
+
+\begin{itemize}
+\item Go has garbage collection. Therefore, most of the problems detailed in
+    section \ref{sec:implDetails} were not an issue in Go.
+\item Go does \emph{not} (yet) have generics. We have not found a way to
+    decently implement containers without the use of generics\footnote{Of
+    course, this doesn't mean that such a way does not exist.}. Go's built-in
+    array, slice, and map containers all require compiler support.
+\item The standard library has no reentrant lock (and discourages its use).
+    We modified all functions to work with standard locks by passing the
+    lock object into the function itself. If a lock had already been acquired,
+    we simply passed a NOP lock.
+\end{itemize}
+
+Further conveniences included the \lstinline|defer| statement (which executes
+functions at the end of the current function) and integrated unit-test and
+benchmark support. Unfortunately, we weren't able to use goroutines in this
+project.
+
+The following table shows the results of a single benchmarking run on a
+quad core Intel i5 760 @ 2.80 GHz using Go version 1.1.1.
+
+\begin{figure}
+\centering
+\begin{tabular}{lll}
+\toprule
+Threads & \lstinline|add()| count & Runtime (ns/op) \\
+\midrule
+1  &   2000000 &            4958 ns/op \\
+2  &   5000000 &            3172 ns/op \\
+4  &   5000000 &            2723 ns/op \\
+8  &   5000000 &            2759 ns/op \\
+16 &   5000000 &            2723 ns/op \\
+\bottomrule
+\end{tabular}
+\caption{Runtimes in nanoseconds per add() operation on 4 cores.}
+\label{fig:go}
+\end{figure}
+
 \begin{thebibliography}{9}
 \bibitem{herlihy}
     M. Herlihy, N. Shavit:
@@ -382,7 +427,7 @@ that require the set to hold comparatively few elements.
 \bibitem{cppstandard}	
 	\emph{Working Draft, Standard for Programming Language C++},
 	document number N3337, obtained on July $8^{th}$, 2013.	
-	http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf \\
+    \url{http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf} \\
     Note: The standard is not available for free and not provided in the
     university's  library. The quoted draft is the first published after the
     C++11 standard, which it contains.
