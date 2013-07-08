@@ -288,21 +288,21 @@ growth can we again place the linearization point at the conclusion of
 \label{sec:performance}
 
 Benchmarking was performed on the saturn system. Pheet was compiled using
-\verb|g++-4.7| and its default makeflags. The cuckoo lock used the same
+\verb|g++-4.7| and its default makeflags. The cuckoo set used the same
 compiler as well as makeflags \verb|-Wall -Wextra -pedantic -std=gnu++11 -O3|.
 
-Benchmarks wer assembled by selecting the the minimum execution time of 10 runs
-was taken for each value\footnote{With the exception of the \emph{Striped
+Benchmarks were assembled by selecting the minimum execution time of 10 runs
+for each value\footnote{With the exception of the \emph{Striped
 Cuckoo Set} with only 8 locks, which exhibited very long execution times}.
 
 Figures \ref{fig:plot1} and \ref{fig:plot2} show the performance for the
 default set implementation provided by pheet using a global lock, our
-\emph{Striped Cuckoo Set} implementation with a 2x1024 locks and our
+\emph{Striped Cuckoo Set} implementation with 2x1024 locks and our
 \emph{Refined Cuckoo Set}, both with an initial capacity of 2x1024 elements
 and a limit of 512 relocate operations.  Figure \ref{fig:plot1} shows the
 performance when 99\% of all operations on the set are calls to
 \lstinline|contains()| and 0.5\% are calls to \lstinline|add()|. Figure
-\ref{fig:plot2} shows the same for a benchmark with 50\% of all operations on
+\ref{fig:plot2} shows the same for a benchmark where 50\% of all operations on
 the set are calls to \lstinline|contains()| and 25\% are calls to
 \lstinline|add()|.
 
@@ -344,9 +344,9 @@ is superceded by the refined version at around 8 threads. We believe that
 Figure \ref{fig:plot2}
 exhibits a larger discrepancy between these variants because the set becomes
 less efficient once the the number of probe sets exceeds the number of locks,
-and this set of benchmarks contains many more \lstinline|add()| calls.
+and this set of benchmarks contains many more \lstinline|add()| calls - consequently the set contains more elements.
 
-Perhaps a surprising point was how much performance was affected by using
+Surprising for us was how much performance was affected by using
 reference counting (through \lstinline|std::shared_ptr|) to hold our locks.
 Even though the implementation of the pointer is lock-free, peak performance was
 reached at only 6 threads and decreased with increasing thread counts.
