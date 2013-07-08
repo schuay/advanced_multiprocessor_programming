@@ -363,17 +363,17 @@ that require the set to hold comparatively few elements.
 \section{Running the code}
 \begin{itemize}
 \item Our implementation is based on pheet revision 420.
-\item In CMakeLists.txt, make sure to set  \lstinline|PHEET_PATH| correctly.
-\item Include our cuckooset.hpp in test/set\_bench/SetBench.cpp
-\item Add a new run\_bench() call to run\_test()
-\item Set  \lstinline|ACTIVE\_TEST| to "test\_variants/amp/set.h" in test/settings.h
-\item In settings.mk, set the:
+\item In \verb|CMakeLists.txt|, make sure to set \lstinline|PHEET_PATH| correctly.
+\item Include our \verb|cuckooset.hpp| in \verb|test/set_bench/SetBench.cpp|.
+\item Add a new \lstinline|run_bench()| call to \lstinline|run_test()|.
+\item Set \lstinline|ACTIVE_TEST| to \verb|test_variants/amp/set.h| in \verb|test/settings.h|.
+\item In \verb|settings.mk|, set the:
 \begin{itemize}
-\item Include path: INCLUDE\_PATH = -I. -I../path/to/cuckoo\_set/src
-\item Library search path as well as link libraries:
-      TEST\_LIBS = -L../path/to/cuckoo\_set/build/src/ -lcuckooset
+\item Include path: \verb|INCLUDE_PATH = -I. -I../path/to/cuckoo_set/src|.
+\item Library search path as well as link libraries: \\
+      \verb|TEST_LIBS = -L../path/to/cuckoo_set/build/src/ -lcuckooset|.
 \end{itemize}
-\item make test \&\& LD\_LIBRARY\_PATH=../path/to/cuckoo\_set/build/src/ bin/pheet\_test
+\item Run \verb|make test && LD_LIBRARY_PATH=../path/to/cuckoo_set/build/src/ bin/pheet_test|.
 \end{itemize}
 
 \section{Addendum: Go}
