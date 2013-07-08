@@ -208,7 +208,7 @@ other classes first:
     \lstinline|std::recursive_lock| implementation is reentrant), deadlock may
     not occur. It is assumed that the callers ensure a correct sequence of
     calls to methods \lstinline|lock()| and \lstinline|unlock()| and that no
-    thread stalls between calling \lstinline|lock()| and \lstinline|unlock()|.
+    thread stalls between calling \lstinline|lock()| and \lstinline|unlock()|. 
 
     Since the standard for C++ \cite{cppstandard} does not address the issue of
     fairness or starvation (relevant sections: 30.2.5 "Requirements for Lockable
